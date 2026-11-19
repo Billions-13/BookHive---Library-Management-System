@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "BookHive (dev - .env)",
+      "request": "launch",
+      "mainClass": "com.bookhive.BookhiveApplication",
+      "projectName": "bookhive",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}
