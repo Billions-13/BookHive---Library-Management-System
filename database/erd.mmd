@@ -1,0 +1,115 @@
+erDiagram
+    roles ||--o{ users : defines
+    users ||--o{ loans : borrows
+    users ||--o{ reservations : places
+    users ||--o{ notifications : receives
+    users ||--o{ audit_logs : performs
+    users ||--o{ book_batches : imports
+    users ||--o{ loans : processes
+    books ||--o{ book_batches : imported_as
+    book_batches ||--o{ book_copies : supplies
+    book_copies ||--o{ loans : borrowed_in
+    book_copies o|--o{ reservations : allocated_to
+    books ||--o{ reservations : requested_for
+    loans ||--o| fines : may_have
+    books ||--o{ book_authors : classified_by
+    authors ||--o{ book_authors : writes
+    books ||--o{ book_categories : categorized_by
+    categories ||--o{ book_categories : categorizes
+
+    roles {
+      bigint id PK
+      varchar name UK
+      int loan_limit
+      int loan_days
+    }
+    users {
+      bigint id PK
+      bigint role_id FK
+      varchar full_name
+      varchar email UK
+      varchar password_hash
+      boolean enabled
+      int failed_attempts
+    }
+    books {
+      bigint id PK
+      varchar isbn UK
+      varchar title
+      varchar edition
+      varchar publisher
+      int publication_year
+      boolean active
+    }
+    authors {
+      bigint id PK
+      varchar name
+      varchar country
+      boolean active
+    }
+    categories {
+      bigint id PK
+      varchar name UK
+      varchar slug UK
+      boolean active
+    }
+    book_authors {
+      bigint book_id PK,FK
+      bigint author_id PK,FK
+    }
+    book_categories {
+      bigint book_id PK,FK
+      bigint category_id PK,FK
+    }
+    book_batches {
+      bigint id PK
+      bigint book_id FK
+      bigint created_by FK
+      varchar batch_code UK
+      int quantity
+      datetime received_at
+    }
+    book_copies {
+      bigint id PK
+      bigint batch_id FK
+      varchar copy_code UK
+      varchar status
+      bigint version
+    }
+    loans {
+      bigint id PK
+      bigint user_id FK
+      bigint copy_id FK
+      varchar status
+      date due_date
+      date return_date
+    }
+    reservations {
+      bigint id PK
+      bigint user_id FK
+      bigint book_id FK
+      bigint copy_id FK
+      varchar status
+      datetime hold_until
+    }
+    fines {
+      bigint id PK
+      bigint loan_id FK
+      decimal amount
+      varchar status
+      datetime paid_at
+    }
+    notifications {
+      bigint id PK
+      bigint user_id FK
+      varchar title
+      varchar type
+      boolean is_read
+    }
+    audit_logs {
+      bigint id PK
+      bigint actor_id FK
+      varchar action
+      varchar entity_type
+      bigint entity_id
+    }

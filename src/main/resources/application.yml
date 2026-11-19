@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: bookhive
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: framework
+
+logging:
+  level:
+    root: INFO
+    com.bookhive: INFO
