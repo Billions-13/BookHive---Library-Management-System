@@ -1,59 +1,65 @@
-# BookHive – URL, API và giao diện bàn giao Bạn 1
+# BookHive Endpoints and API Handoff
 
-## Vai trò / quyền
+## Roles and permissions
 
-- `STUDENT`, `LECTURER`: trang cá nhân, tự mượn sách (khi còn và không có queue), đặt trước khi hết sách.
-- `LIBRARIAN`: thêm/sửa sách, nhập lô, quản lý bản sao, phát hành/trả sách, phạt, CSV.
-- `ADMIN`: mọi chức năng Librarian + quản lý tài khoản. Spring Security kiểm tra ở **backend**, không phụ thuộc CSS/JS.
-- Các form có POST phải giữ `th:action` + method POST để Spring Security xử lý CSRF.
+- `STUDENT` and `LECTURER` can access their account pages, check out available copies when there is no waiting queue, and reserve titles that are out of stock.
+- `LIBRARIAN` can add and edit titles, receive stock, manage physical copies, issue loans, process returns, manage fines, and import or export CSV files.
+- `ADMIN` has all librarian permissions and can manage accounts. Spring Security enforces permissions on the server.
+- Keep `th:action` and `method="post"` on POST forms so Spring Security can handle CSRF protection.
 
-## URLs và method
+## URLs and methods
 
-| URL | Method | Quyền | Công việc |
-|---|---|---|---|
-| `/` | GET | Public | Home |
-| `/books` | GET | Public | Catalogue: 7 filter, sorting và paging 10/20/50/100 |
-| `/books/{id}` | GET | Public | Chi tiết, tồn kho, nút borrow/reserve |
-| `/register`, `/login` | GET/POST | Public | Đăng ký, đăng nhập |
-| `/logout` | POST | Signed in | Đăng xuất |
-| `/my/profile`, `/my/password` | GET/POST | Signed in | Hồ sơ, đổi mật khẩu |
-| `/my/loans` | GET | Signed in | Sách đang mượn/lịch sử |
-| `/my/borrow/{bookId}` | POST | Student/Lecturer (logic service) | Mượn một bản sao khả dụng |
-| `/my/reservations` | GET | Signed in | Hàng đợi của mình |
-| `/my/reservations/{bookId}` | POST | Student/Lecturer (logic service) | Đặt trước khi hết |
-| `/my/reservations/{id}/cancel` | POST | Owner only | Hủy đặt |
-| `/my/fines` | GET | Signed in | Tiền phạt của mình |
-| `/librarian/books/new` | GET/POST | Staff | Tạo đầu sách |
-| `/librarian/books/{id}/edit` | GET/POST | Staff | Chỉnh sửa đầu sách |
-| `/librarian/books/{id}/archive` | POST | Staff | Xóa mềm, cấm khi còn giao dịch mở |
-| `/librarian/books/{id}/inventory` | GET | Staff | Bảng lô/bản sao, trạng thái |
-| `/librarian/books/{id}/batches` | POST | Staff | Nhập thêm số lượng, mã bản sao riêng |
-| `/librarian/books/{id}/batches/{batchId}/discard` | POST | Staff | Thanh lý lô (chỉ khi không đang mượn/giữ) |
-| `/librarian/books/{id}/copies/{copyId}/status` | POST | Staff | Đánh dấu AVAILABLE/DAMAGED/LOST/DISCARDED |
-| `/librarian/loans` | GET/POST | Staff | Xem, phát hành phiếu mượn |
-| `/librarian/loans/{id}/return` | POST | Staff | Trả và tính phạt |
-| `/librarian/fines` | GET | Staff | Danh sách phạt |
-| `/librarian/fines/{id}/resolve` | POST | Staff | PAID hoặc WAIVED |
-| `/librarian/authors`, `/librarian/categories` | GET | Staff | 5 bộ lọc, sort và paging; `/new`, `/{id}/edit`, `/{id}/archive` tương ứng |
-| `/librarian/catalog/csv` | GET | Staff | CSV menu |
-| `/librarian/catalog/import` | POST | Staff | Upload CSV, rollback toàn file nếu lỗi |
-| `/librarian/catalog/export` | GET | Staff | Xuất CSV (giảm rủi ro formula injection) |
-| `/admin/users` | GET | Admin | List users, 5 bộ lọc, sort và paging |
-| `/admin/users/new`, `/admin/users/{id}/edit` | GET/POST | Admin | Tạo, sửa, đổi role, reset password |
-| `/admin/users/{id}/toggle` | POST | Admin | Khóa/mở account |
-| `/api/stats` | GET | Staff | JSON thống kê cho Chart.js |
+Staff access includes `LIBRARIAN` and `ADMIN`.
 
-API JSON thống kê: `{"totalTitles":31,"availableCopies":0,"borrowedCopies":0,"overdueLoans":0}`. Số là **ví dụ định dạng**, không phải kết quả live; dữ liệu thực lấy từ MySQL.
+| URL | Method | Access | Purpose |
+| --- | --- | --- | --- |
+| `/` | GET | Public | Home page |
+| `/books` | GET | Public | Catalog with seven filters, sorting, and page sizes of 10, 20, 50, and 100 |
+| `/books/{id}` | GET | Public | Title details, stock availability, and borrow or reserve actions |
+| `/register`, `/login` | GET/POST | Public | Registration and sign-in |
+| `/logout` | POST | Signed in | Sign out |
+| `/my/profile`, `/my/password` | GET/POST | Signed in | Edit a profile or change a password |
+| `/my/loans` | GET | Signed in | View current loans and loan history |
+| `/my/borrow/{bookId}` | POST | Student or lecturer | Check out an available copy |
+| `/my/reservations` | GET | Signed in | View personal reservations |
+| `/my/reservations/{bookId}` | POST | Student or lecturer | Reserve a title that is out of stock |
+| `/my/reservations/{id}/cancel` | POST | Reservation owner | Cancel a reservation |
+| `/my/fines` | GET | Signed in | View personal fines |
+| `/librarian/books/new` | GET/POST | Staff | Create a book title |
+| `/librarian/books/{id}/edit` | GET/POST | Staff | Edit a book title |
+| `/librarian/books/{id}/archive` | POST | Staff | Archive a title once all open transactions have been resolved |
+| `/librarian/books/{id}/inventory` | GET | Staff | View batches, physical copies, and their statuses |
+| `/librarian/books/{id}/batches` | POST | Staff | Receive stock and generate a unique code for each copy |
+| `/librarian/books/{id}/batches/{batchId}/discard` | POST | Staff | Discard a batch once all borrowed or held copies are cleared |
+| `/librarian/books/{id}/copies/{copyId}/status` | POST | Staff | Set a copy status to `AVAILABLE`, `DAMAGED`, `LOST`, or `DISCARDED` |
+| `/librarian/loans` | GET/POST | Staff | View or issue loans |
+| `/librarian/loans/{id}/return` | POST | Staff | Process a return and calculate any late fine |
+| `/librarian/fines` | GET | Staff | List fines |
+| `/librarian/fines/{id}/resolve` | POST | Staff | Mark a fine as `PAID` or `WAIVED` |
+| `/librarian/authors`, `/librarian/categories` | GET | Staff | List records with five filters, sorting, and pagination. Each resource also supports `/new`, `/{id}/edit`, and `/{id}/archive`. |
+| `/librarian/catalog/csv` | GET | Staff | Open the CSV import and export page |
+| `/librarian/catalog/import` | POST | Staff | Upload a CSV file. A validation error rolls back the import. |
+| `/librarian/catalog/export` | GET | Staff | Export the catalog as CSV with safeguards against spreadsheet formula injection |
+| `/admin/users` | GET | Admin | List users with five filters, sorting, and pagination |
+| `/admin/users/new`, `/admin/users/{id}/edit` | GET/POST | Admin | Create or edit accounts, change roles, and reset passwords |
+| `/admin/users/{id}/toggle` | POST | Admin | Enable or disable an account |
+| `/api/stats` | GET | Staff | Return JSON statistics for use by Chart.js |
 
-## Quy tắc tồn kho
+`GET /api/stats` returns the fields shown below. Live counts come from MySQL.
 
-Một `book_batches` có `quantity` vật lý. Mỗi lần nhập thêm tạo `quantity` `book_copies` với `copy_code` dạng `COPY010191`, **không tái sử dụng mã của sách cũ**. Khi hết `AVAILABLE`, trang chi tiết hiển thị hết sách, cho đặt trước. Đổi bản khác ISBN: tạo đầu sách mới trước, sau đó nhập lô mới và thanh lý sách cũ khi không còn phiếu đang mở.
+```json
+{"totalTitles":31,"availableCopies":0,"borrowedCopies":0,"overdueLoans":0}
+```
 
-Mã mới lấy từ `id` tự tăng do MySQL cấp (ví dụ `id=10191` → `COPY010191`), đảm bảo duy nhất kể cả nhập đồng thời. `COPY001`, `COPY002` trong phân công chỉ là ví dụ minh họa định dạng.
+## Inventory rules
 
-## Bạn 2 / Bạn 3 nên giữ nguyên
+Each `book_batches` record stores the number of physical copies received in `quantity`. Receiving a batch creates that many `book_copies` records. Each copy gets a new `copy_code`, such as `COPY010191`. When no copies are `AVAILABLE`, the detail page shows that the title is out of stock and offers a reservation action. To replace stock with an edition that has a different ISBN, create a new title, receive the new batch, and discard the old copies once all open transactions are resolved.
 
-- `th:field`, `name`, `th:action` của `<form>`; các URL phía trên; trường `id` khi dùng label.
-- Bạn 2 chỉ thêm CSS/responsive, không sửa cấu trúc Java/SQL hoặc bỏ CSRF token.
-- Bạn 3 chỉ thêm JS Fetch/DOM, dashboard Chart.js, tích hợp CSV/email và deploy; không tạo backend mượn/trả thứ hai.
-- Các URL trả HTML không phải JSON API (ngoại trừ `/api/stats` và file CSV). Muốn AJAX toàn diện thì cần hai bên thống nhất contract trước.
+New copy codes are derived from auto-increment IDs assigned by MySQL. For example, ID `10191` produces `COPY010191`. This keeps the codes unique when multiple batches are received concurrently. The codes `COPY001` and `COPY002` in the assignment illustrate the format.
+
+## Integration notes for Members 2 and 3
+
+- Preserve the URLs above, the form attributes `th:field`, `name`, and `th:action`, and the field IDs used by labels.
+- Member 2 adds CSS and responsive layouts while preserving the Java and SQL structure and the CSRF tokens.
+- Member 3 adds JavaScript using Fetch and DOM APIs, a Chart.js dashboard, CSV and email integration, and deployment. Reuse the existing borrowing and return logic.
+- Page endpoints return HTML. The statistics endpoint returns JSON, and the CSV export returns a file. Agree on request and response contracts with the team before adding further AJAX interactions.

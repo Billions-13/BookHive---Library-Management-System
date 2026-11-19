@@ -10,10 +10,10 @@ The project uses **Java 17**, **Spring Boot 4.1.2**, **Spring MVC**, **Thymeleaf
 
 1. Install **JDK 17 or later**, **Maven**, and **MySQL Server 8.0.16 or later**. Verify your Java and Maven installations:
 
-   powershell
+   ```powershell
    java -version
    mvn -version
-   
+   ```
 
    If you use VS Code, install the **Extension Pack for Java** and open the entire project folder containing `pom.xml`.
 

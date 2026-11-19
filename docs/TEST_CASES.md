@@ -1,25 +1,25 @@
-# BookHive – 15 tình huống kiểm thử nghiệp vụ
+# BookHive Business Test Checklist
 
-Tất cả trường hợp dưới đây cần kiểm tra trên **Windows + Spring Boot + MySQL thật**, không thể suy ra là PASS chỉ vì code đã viết. Thực hiện trên database development; backup trước khi thử ghi.
+Run all 15 scenarios on Windows with Spring Boot connected to a MySQL development database. Back up the database before running scenarios that write data. Record the observed results for each scenario.
 
-| # | Ca kiểm thử | Kết quả mong đợi |
-|---|---|---|
-| 1 | Mở `/` và `/books` khi chưa login | Truy cập được |
-| 2 | Tìm kiếm theo title, ISBN, author, category, publisher, language, year | Kết quả đúng, không duplicate khi nhiều tác giả |
-| 3 | Sắp xếp + các page size 10/20/50/100 và Next/Previous | Phân trang đúng |
-| 4 | Đăng ký email mới và đăng nhập | Lưu BCrypt, role STUDENT |
-| 5 | Đăng ký trùng email hoặc sai password | Hiện lỗi hợp lý |
-| 6 | Đăng nhập sai 5 lần rồi thử đăng nhập | Khóa tạm 15 phút; đăng nhập đúng sau hạn thì reset |
-| 7 | Student mở `/admin/users` hoặc `/librarian/loans` | Bị chặn tại server (403) |
-| 8 | Librarian tạo/sửa/archive đầu sách; archive đang có active loan | Cập nhật đúng; từ chối archive khi còn giao dịch |
-| 9 | Nhập lô 3 bản sao mới | Có đúng 3 mã COPY khác nhau, batch history còn nguyên |
-| 10 | Đánh dấu hư/thanh lý sách đang mượn | Server từ chối; không mất lịch sử |
-| 11 | Student mượn đủ hạn mức rồi mượn thêm | Bị từ chối; không sinh 2 phiếu ACTIVE cho 1 copy |
-| 12 | Mượn đến khi hết bản AVAILABLE | Hiện OUT OF STOCK; không cho mượn tiếp |
-| 13 | Đặt trước khi hết; trả sách hoặc nhập lô mới | Hàng đợi oldest-first; chuyển READY, copy RESERVED |
-| 14 | Trả quá hạn + resolve fine | Trả xong status RETURNED, tiền phạt 2.000 VNĐ/ngày, PAID/WAIVED |
-| 15 | Import CSV hợp lệ / CSV trùng ISBN, export, `/api/stats` | Import thành công hoặc rollback khi lỗi; CSV/JSON lấy dữ liệu MySQL |
+| # | Test case | Expected result |
+| --- | --- | --- |
+| 1 | Open `/` and `/books` while signed out | Both pages are accessible |
+| 2 | Search by title, ISBN, author, category, publisher, language, and year | Results match the filters. Titles with multiple authors appear once. |
+| 3 | Change the sort order, try page sizes of 10, 20, 50, and 100, and use Next and Previous | Results sort and paginate correctly |
+| 4 | Register with a new email address and sign in | The password is stored as a BCrypt hash and the account receives the `STUDENT` role |
+| 5 | Register with a duplicate email address or sign in with an incorrect password | The application displays an appropriate error |
+| 6 | Sign in with an incorrect password five times, then retry | The account is locked for 15 minutes. A successful sign-in after the lock expires resets the attempts. |
+| 7 | As a student, open `/admin/users` or `/librarian/loans` | The server responds with HTTP 403 |
+| 8 | As a librarian, create, edit, and archive titles, then attempt to archive a title with an active loan | Eligible titles update correctly. The server rejects archiving while a transaction is open. |
+| 9 | Receive a batch of three copies | The batch history contains the receipt and exactly three unique copy codes are created |
+| 10 | Attempt to mark a borrowed copy as damaged or discard it | The server rejects the change and preserves the loan history |
+| 11 | Reach the student borrowing limit and attempt another checkout | The server rejects the checkout. Each copy has at most one `ACTIVE` loan. |
+| 12 | Check out the last `AVAILABLE` copy | The catalog shows `OUT OF STOCK` and further checkouts are blocked |
+| 13 | Reserve an out-of-stock title, then return a copy or receive a new batch | The oldest reservation becomes `READY` and its copy becomes `RESERVED` |
+| 14 | Return a book late and resolve the fine | The loan becomes `RETURNED`, the fine is calculated at VND 2,000 per day, and staff can mark it `PAID` or `WAIVED` |
+| 15 | Import a valid CSV, try a CSV with a duplicate ISBN, export CSV, and open `/api/stats` | The valid import succeeds and the invalid import rolls back. CSV and JSON output reflect MySQL data. |
 
-**Kiểm tra database** bằng `database/verify.sql`: count bảng/cột, mã bản sao trùng, phiếu mượn đang hoạt động trùng, phiếu READY không giữ copy, batch mismatch. Kiểm tra log backend nếu có lỗi, chụp ảnh màn hình kết quả cho report.
+Run [database verification queries](../database/verify.sql) to check table and column counts, duplicate copy codes, multiple active loans for a copy, ready reservations without a held copy, and discrepancies in batch quantities. Check backend logs when a test fails and capture screenshots for the report.
 
-**Chưa kiểm thử trong môi trường này:** Maven build + MySQL end-to-end vì môi trường kiểm tra không có Maven tải phụ thuộc và MySQL. Các tình huống trên là checklist yêu cầu chạy thực tế trước khi bàn giao.
+At the original handoff, the Maven build and end-to-end MySQL checks were pending because the test environment could not download Maven dependencies and lacked MySQL. Run the manual scenarios above before delivery.

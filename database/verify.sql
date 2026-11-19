@@ -28,7 +28,7 @@ SELECT 'audit_logs',COUNT(*) FROM audit_logs;
 SELECT b.id,b.title,b.isbn,COUNT(DISTINCT c.id) AS copies_total,
   COUNT(DISTINCT CASE WHEN c.status='AVAILABLE' THEN c.id END) AS available,
   IF(COUNT(DISTINCT CASE WHEN c.status='AVAILABLE' THEN c.id END)=0,
-    'HIEN KHONG CO SACH DE MUON','CON SACH') AS availability
+    'OUT OF STOCK','IN STOCK') AS availability
  FROM books b LEFT JOIN book_batches bt ON bt.book_id=b.id
  LEFT JOIN book_copies c ON c.batch_id=bt.id
  GROUP BY b.id,b.title,b.isbn ORDER BY b.id;
