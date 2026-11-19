@@ -1,0 +1,6 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Fine Management</title></head><body>
+<h1>Fine Management</h1><table border="1"><tr><th>ID</th><th>Loan ID</th><th>Amount VND</th><th>Status</th><th>Resolve</th></tr>
+<tr th:each="f : ${fines}"><td th:text="${f.id}"></td><td th:text="${f.loan.id}"></td><td th:text="${f.amount}"></td>
+<td th:text="${f.status}"></td><td><form th:if="${f.status.name() == 'UNPAID'}" th:action="@{/librarian/fines/{id}/resolve(id=${f.id})}" method="post">
+<select name="status"><option value="PAID">Paid</option><option value="WAIVED">Waived</option></select><button>Save</button></form></td></tr></table></body></html>

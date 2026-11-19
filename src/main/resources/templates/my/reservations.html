@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>My Reservations</title></head><body>
+<h1>My Reservations</h1><p><a th:href="@{/books}">Book catalog</a></p>
+<table border="1"><tr><th>Title</th><th>Requested</th><th>Status</th><th>Pickup by</th><th>Action</th></tr>
+<tr th:each="r : ${reservations}"><td th:text="${r.book.title}"></td><td th:text="${r.reservedAt}"></td>
+<td th:text="${r.status}"></td><td th:text="${r.holdUntil}"></td><td>
+<form th:if="${r.status.name() == 'WAITING' or r.status.name() == 'READY' or r.status.name() == 'REQUESTED'}"
+th:action="@{/my/reservations/{id}/cancel(id=${r.id})}" method="post"><button>Cancel</button></form></td></tr></table>
+<p th:if="${#lists.isEmpty(reservations)}">No reservations yet.</p></body></html>

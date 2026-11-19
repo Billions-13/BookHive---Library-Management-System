@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Loan Management</title></head><body>
+<h1>Loan Management</h1><form th:action="@{/librarian/loans}" method="post">
+<label>Book ID <input type="number" name="bookId" required></label>
+<label>Reader <select name="userId"><option th:each="u : ${users}" th:value="${u.id}" th:text="${u.fullName + ' (' + u.email + ')'}"></option></select></label>
+<button>Issue loan</button></form>
+<table border="1"><tr><th>ID</th><th>Reader</th><th>Book copy</th><th>Due date</th><th>Status</th><th>Return</th></tr>
+<tr th:each="l : ${loans}"><td th:text="${l.id}"></td><td th:text="${l.user.fullName}"></td><td th:text="${l.copy.copyCode}"></td><td th:text="${l.dueDate}"></td><td th:text="${l.status}"></td>
+<td><form th:if="${l.status.name() == 'ACTIVE'}" th:action="@{/librarian/loans/{id}/return(id=${l.id})}" method="post"><button>Receive return</button></form></td></tr></table></body></html>
