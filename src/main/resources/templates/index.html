@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>BookHive</title>
+</head>
+<body>
+    <header>
+        <h1>BookHive Library</h1>
+
+        <nav>
+            <a th:href="@{/}">Home</a>
+            <a th:href="@{/books}">Books</a>
+            <a th:href="@{/my/loans}">My Loans</a>
+            <a th:href="@{/my/profile}">Profile</a>
+            <a th:href="@{/login}">Login</a>
+        </nav>
+    </header>
+
+    <main>
+        <h2>University Library Management System</h2>
+        <p>Search, borrow and manage university books.</p>
+
+        <form th:action="@{/books}" method="get">
+            <input type="search" name="title"
+                   placeholder="Search for books">
+            <button type="submit">Search</button>
+        </form>
+    </main>
+</body>
+</html>

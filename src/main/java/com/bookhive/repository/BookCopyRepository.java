@@ -19,4 +19,6 @@ public interface BookCopyRepository
     List<BookCopy> findByBookIdAndStatusOrderByIdAsc(
         Long bookId, CopyStatus status, Pageable pageable
     );
+
+    long countByStatus(CopyStatus status);
 }

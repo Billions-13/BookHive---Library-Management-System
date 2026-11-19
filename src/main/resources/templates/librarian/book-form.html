@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Book Form - BookHive</title>
+</head>
+<body>
+    <h1>Book Information</h1>
+
+    <form th:action="${formAction}"
+          th:object="${bookForm}" method="post">
+
+        <label for="isbn">ISBN</label>
+        <input id="isbn" th:field="*{isbn}" required>
+        <span th:errors="*{isbn}"></span>
+
+        <label for="title">Title</label>
+        <input id="title" th:field="*{title}" required>
+        <span th:errors="*{title}"></span>
+
+        <label for="edition">Edition</label>
+        <input id="edition" th:field="*{edition}">
+
+        <label for="publisher">Publisher</label>
+        <input id="publisher" th:field="*{publisher}">
+
+        <label for="publicationYear">Publication Year</label>
+        <input id="publicationYear" type="number"
+               th:field="*{publicationYear}">
+
+        <label for="language">Language</label>
+        <input id="language" th:field="*{language}">
+
+        <label for="description">Description</label>
+        <textarea id="description"
+                  th:field="*{description}"></textarea>
+
+        <button type="submit">Save Book</button>
+    </form>
+</body>
+</html>

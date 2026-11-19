@@ -4,6 +4,8 @@ import com.bookhive.entity.Loan;
 import com.bookhive.enums.LoanStatus;
 import org.springframework.data.jpa.repository.*;
 import jakarta.persistence.LockModeType;
+
+import java.time.LocalDate;
 import java.util.*;
 
 public interface LoanRepository
@@ -22,4 +24,10 @@ public interface LoanRepository
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT l FROM Loan l WHERE l.id = :id")
     Optional<Loan> lockById(Long id);
+
+
+    long countByStatusAndDueDateBefore(
+    LoanStatus status,
+    LocalDate date
+);
 }

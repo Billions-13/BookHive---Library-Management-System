@@ -1,0 +1,60 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Book Catalog - BookHive</title>
+</head>
+<body>
+    <h1>Book Catalog</h1>
+
+    <form th:action="@{/books}" method="get">
+        <label for="title">Search title</label>
+        <input id="title" name="title"
+               th:value="${title}">
+
+        <label for="size">Page size</label>
+        <select id="size" name="size">
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+        </select>
+
+        <button type="submit">Search</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ISBN</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Available</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr th:each="book : ${books.content}">
+                <td th:text="${book.isbn}"></td>
+                <td th:text="${book.title}"></td>
+                <td th:text="${book.authorNames}"></td>
+                <td th:text="${book.availableCopies}"></td>
+                <td>
+                    <a th:href="@{/books/{id}(id=${book.id})}">
+                        View
+                    </a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p th:if="${books.isEmpty()}">No books found.</p>
+
+    <p>
+        Page <span th:text="${books.number + 1}"></span>
+        of <span th:text="${books.totalPages}"></span>
+    </p>
+</body>
+</html>
