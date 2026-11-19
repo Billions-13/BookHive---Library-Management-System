@@ -1,4 +1,3 @@
-
 package com.bookhive.entity;
 
 import com.bookhive.enums.LoanStatus;
@@ -32,6 +31,7 @@ public class Loan {
     private LocalDate returnDate;
 
     @Enumerated(EnumType.STRING)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
     private LoanStatus status;
 
     @ManyToOne

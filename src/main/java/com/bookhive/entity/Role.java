@@ -1,4 +1,3 @@
-
 package com.bookhive.entity;
 
 import com.bookhive.enums.RoleName;
@@ -18,6 +17,7 @@ public class Role {
     private Long id;
 
     @Enumerated(EnumType.STRING)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
     @Column(nullable = false, unique = true)
     private RoleName name;
 

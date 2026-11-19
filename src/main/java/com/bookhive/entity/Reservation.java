@@ -29,6 +29,7 @@ public class Reservation {
     private LocalDateTime reservedAt;
 
     @Enumerated(EnumType.STRING)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
     private ReservationStatus status;
 
     @Column(name = "hold_until")

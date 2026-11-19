@@ -22,6 +22,7 @@ public class Fine {
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
     private FineStatus status;
 
     @Column(name = "paid_at")

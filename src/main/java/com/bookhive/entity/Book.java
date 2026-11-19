@@ -1,4 +1,3 @@
-
 package com.bookhive.entity;
 
 import jakarta.persistence.*;
@@ -23,12 +22,15 @@ public class Book {
     @Column(nullable = false)
     private String title;
 
+    @Column(length = 80)
     private String edition;
+    @Column(length = 150)
     private String publisher;
 
     @Column(name = "publication_year")
     private Integer publicationYear;
 
+    @Column(length = 50)
     private String language;
 
     @Column(columnDefinition = "TEXT")
