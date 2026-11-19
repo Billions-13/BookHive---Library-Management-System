@@ -1,4 +1,3 @@
--- BOOKHIVE / PART II - VERIFY DATABASE REQUIREMENTS
 USE bookhive_db;
 
 -- 1. EXPECTED: 14 tables, 50+ columns, at least 2 many-to-many junction tables.
@@ -63,11 +62,11 @@ SELECT c.id AS copy_id,b.book_id AS derived_book_id
 
 -- 10. Demo of overdue loan/fine relationship.
 SELECT l.id,l.due_date,u.full_name,c.copy_code,
-       DATEDIFF('2026-11-19',l.due_date) AS overdue_days,f.amount,f.status AS fine_status
+       DATEDIFF(CURDATE(),l.due_date) AS overdue_days,f.amount,f.status AS fine_status
  FROM loans l JOIN users u ON l.user_id=u.id
  JOIN book_copies c ON l.copy_id=c.id
  LEFT JOIN fines f ON f.loan_id=l.id
- WHERE l.status='ACTIVE' AND l.due_date<'2026-11-19'
+ WHERE l.status='ACTIVE' AND l.due_date<CURDATE()
  ORDER BY l.due_date;
 
 -- 11. Book catalog and multi-author query.
