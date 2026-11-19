@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Inventory</title></head><body>
+<h1>Inventory: <span th:text="${book.title}"></span></h1><p th:if="${error}" th:text="${error}"></p>
+<p><a th:href="@{/books/{id}(id=${book.id})}">Book details</a></p>
+<h2>Receive new batch</h2>
+<form th:action="@{/librarian/books/{id}/batches(id=${book.id})}" th:object="${batchForm}" method="post">
+<p><label>Quantity <input type="number" min="1" max="1000" th:field="*{quantity}"></label><span th:errors="*{quantity}"></span></p>
+<p><label>Supplier <input th:field="*{supplier}"></label></p>
+<p><label>Notes <input th:field="*{notes}"></label></p><button>Receive copies</button></form>
+<h2>Batch history</h2><table border="1"><tr><th>Code</th><th>Quantity</th><th>Received</th><th>Supplier</th><th>Action</th></tr>
+<tr th:each="b : ${batches}"><td th:text="${b.batchCode}"></td><td th:text="${b.quantity}"></td><td th:text="${b.receivedAt}"></td><td th:text="${b.supplier}"></td>
+<td><form th:action="@{/librarian/books/{bookId}/batches/{id}/discard(bookId=${book.id},id=${b.id})}" method="post"><button>Discard entire old batch</button></form></td></tr></table>
+<h2>Individual copies</h2><table border="1"><tr><th>Copy code</th><th>Status</th><th>Batch</th><th>Update status</th></tr>
+<tr th:each="c : ${copies}"><td th:text="${c.copyCode}"></td><td th:text="${c.status}"></td><td th:text="${c.batch.batchCode}"></td>
+<td><form th:action="@{/librarian/books/{bookId}/copies/{copyId}/status(bookId=${book.id},copyId=${c.id})}" method="post">
+<select name="status"><option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"></option></select>
+<input name="note" placeholder="Reason"><button>Change</button></form></td></tr></table>
+</body></html>
