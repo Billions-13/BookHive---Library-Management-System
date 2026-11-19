@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Profile</title></head><body>
+<h1>My Profile</h1><p th:if="${param.updated}">Profile updated.</p>
+<form th:action="@{/my/profile}" th:object="${form}" method="post">
+<p><label>Full name <input th:field="*{fullName}" required></label><span th:errors="*{fullName}"></span></p>
+<p><label>Phone <input th:field="*{phone}"></label><span th:errors="*{phone}"></span></p><button>Update</button></form>
+<p><a th:href="@{/my/password}">Change password</a></p></body></html>

@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Author Form</title></head><body>
+<h1>Author</h1><p th:if="${error}" th:text="${error}"></p>
+<form th:action="${formAction}" th:object="${form}" method="post">
+<p><label>Name <input th:field="*{name}" required></label><span th:errors="*{name}"></span></p>
+<p><label>Country <input th:field="*{country}"></label></p>
+<p><label>Birth year <input type="number" th:field="*{birthYear}"></label></p>
+<p><label>Death year <input type="number" th:field="*{deathYear}"></label></p>
+<p><label>Website <input th:field="*{website}"></label></p>
+<p><label>Biography <textarea th:field="*{biography}"></textarea></label></p><button>Save</button></form></body></html>

@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Category Form</title></head><body>
+<h1>Category</h1><p th:if="${error}" th:text="${error}"></p>
+<form th:action="${formAction}" th:object="${form}" method="post">
+<p><label>Name <input th:field="*{name}" required></label><span th:errors="*{name}"></span></p>
+<p><label>Slug <input th:field="*{slug}" required></label><span th:errors="*{slug}"></span></p>
+<p><label>Audience <input th:field="*{targetAudience}"></label></p>
+<p><label>Display order <input type="number" th:field="*{displayOrder}"></label></p>
+<p><label>Description <textarea th:field="*{description}"></textarea></label></p><button>Save</button></form></body></html>
