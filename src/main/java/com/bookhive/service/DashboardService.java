@@ -19,8 +19,8 @@ public class DashboardService {
     public DashboardStats getStats() {
         return new DashboardStats(
             books.countByActiveTrue(),
-            copies.countByStatus(CopyStatus.AVAILABLE),
-            copies.countByStatus(CopyStatus.BORROWED),
+            copies.countByBatchBookActiveTrueAndStatus(CopyStatus.AVAILABLE),
+            copies.countByBatchBookActiveTrueAndStatus(CopyStatus.BORROWED),
             loans.countByStatusAndDueDateBefore(
                 LoanStatus.ACTIVE, LocalDate.now()
             )

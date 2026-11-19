@@ -25,7 +25,7 @@ public class InventoryService {
 
     @Transactional
     public Long receive(Long bookId, BatchForm form) {
-        if (form.getQuantity() < 1 || form.getQuantity() > 1000)
+        if (form.getQuantity() == null || form.getQuantity() < 1 || form.getQuantity() > 1000)
             throw new IllegalArgumentException("Quantity must be 1–1000");
         Book book = books.lockById(bookId).orElseThrow(() -> new NotFoundException("Book not found"));
         if (!book.isActive()) throw new IllegalArgumentException("Book is archived");

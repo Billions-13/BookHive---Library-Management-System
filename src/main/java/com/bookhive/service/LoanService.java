@@ -22,7 +22,6 @@ public class LoanService {
     private final LoanRepository loans;
     private final UserRepository users;
     private final FineRepository fines;
-    private final ReservationRepository reservations;
     private final ReservationService queue;
     private final AuditService audit;
 

@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>CSV Import/Export</title></head><body>
+<h1>Catalog CSV Import/Export</h1><p th:if="${error}" th:text="${error}"></p><p th:if="${result}" th:text="${result}"></p>
+<p>CSV header: isbn,title,publisher,publication_year,language</p>
+<form th:action="@{/librarian/catalog/import}" method="post" enctype="multipart/form-data">
+<label>Choose .csv <input type="file" name="file" accept=".csv,text/csv" required></label><button>Import</button></form>
+<p><a th:href="@{/librarian/catalog/export}">Export catalog CSV</a></p></body></html>
