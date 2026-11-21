@@ -30,17 +30,27 @@ public class EmailReminderService {
             User reader = loan.getUser();
             // Development seed uses invalid example.test mailboxes; never send to them.
             if (!reader.isEnabled() || reader.getEmail().endsWith(".example.test")) continue;
-            String message = "Loan #" + loan.getId() + ": due date " + loan.getDueDate()
-                + (loan.getDueDate().isBefore(today) ? " (overdue)" : " (due soon)");
+            boolean overdue = loan.getDueDate().isBefore(today);
+            String title = loan.getCopy().getBatch().getBook().getTitle();
+            // Also the de-duplication key: one e-mail for "due soon" and one more once it becomes overdue.
+            String message = "Phiếu mượn #" + loan.getId() + " – \"" + title + "\": hạn trả "
+                + loan.getDueDate().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                + (overdue ? " (đã quá hạn)" : " (sắp đến hạn)");
             String type = "DUE_REMINDER";
             if (notifications.existsByUserIdAndTypeAndMessage(reader.getId(), type, message)) continue;
             SimpleMailMessage mail = new SimpleMailMessage();
             mail.setTo(reader.getEmail());
-            mail.setSubject("BookHive loan due date");
-            mail.setText(message);
+            mail.setSubject(overdue ? "[BookHive] Sách mượn đã quá hạn trả" : "[BookHive] Nhắc hạn trả sách");
+            mail.setText("Chào " + reader.getFullName() + ",\n\n"
+                + message + ".\n\n"
+                + (overdue
+                    ? "Vui lòng trả sách sớm tại quầy thư viện. Phí phạt trả trễ là "
+                        + LoanService.DAILY_FINE_VND + " ₫ cho mỗi ngày quá hạn.\n\n"
+                    : "Vui lòng trả sách hoặc liên hệ thủ thư trước hạn để tránh bị phạt.\n\n")
+                + "Thư viện BookHive");
             sender.send(mail);
             Notification n = new Notification();
-            n.setUser(reader); n.setTitle("Loan due reminder");
+            n.setUser(reader); n.setTitle(overdue ? "Sách quá hạn trả" : "Nhắc hạn trả sách");
             n.setMessage(message); n.setType(type);
             n.setSentAt(java.time.LocalDateTime.now());
             notifications.save(n);
