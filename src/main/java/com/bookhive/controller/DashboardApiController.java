@@ -16,4 +16,10 @@ public class DashboardApiController {
     public DashboardStats stats() {
         return dashboard.getStats();
     }
+
+    /** Copy status breakdown, loans per month and most borrowed titles for Chart.js. */
+    @GetMapping("/charts")
+    public com.bookhive.dto.DashboardCharts charts() {
+        return dashboard.getCharts();
+    }
 }

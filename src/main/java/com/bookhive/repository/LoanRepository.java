@@ -20,6 +20,14 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     boolean existsByCopyIdAndStatus(Long copyId, LoanStatus status);
     boolean existsByCopyBatchBookIdAndStatus(Long bookId, LoanStatus status);
 
+    // Dashboard: loans started in [from, to)
+    long countByBorrowedAtGreaterThanEqualAndBorrowedAtLessThan(java.time.LocalDateTime from, java.time.LocalDateTime to);
+
+    // Dashboard: most borrowed titles -> rows of {book id, title, loan count}
+    @Query("select b.id, b.title, count(l) from Loan l join l.copy c join c.batch bt join bt.book b "
+         + "group by b.id, b.title order by count(l) desc, b.title asc")
+    List<Object[]> mostBorrowedBooks(org.springframework.data.domain.Pageable pageable);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select l from Loan l where l.id = :id")
     Optional<Loan> lockById(@Param("id") Long id);
