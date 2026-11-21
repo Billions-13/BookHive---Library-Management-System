@@ -14,6 +14,7 @@
  *   input[type=file][data-max-bytes] check size/extension/header of a CSV before upload
  *   [data-autohide]                  alert that closes itself after a few seconds
  *   [data-history-back]              "Back" button
+ *   [data-availability-url]          book detail: refresh stock counters every 30 s
  *
  * window.BookHive exposes fetchJson(), confirmDialog() and notify() for page scripts.
  */
@@ -488,6 +489,55 @@
     }
 
     /* ------------------------------------------------------------------ */
+    /* Book detail: keep the stock counters up to date                     */
+    /* ------------------------------------------------------------------ */
+
+    const AVAILABILITY_INTERVAL_MS = 30000;
+
+    function initAvailability() {
+        const box = $('[data-availability-url]');
+        if (!box) return;
+        const notice = $('[data-availability-changed]');
+        let available = Number(box.dataset.available);
+        let timer;
+
+        const refresh = async () => {
+            try {
+                const data = await fetchJson(box.dataset.availabilityUrl);
+                $$('[data-count]', box).forEach((element) => {
+                    const value = data[element.dataset.count];
+                    if (typeof value === 'number' && element.textContent !== String(value)) {
+                        element.textContent = value;
+                        element.classList.add('bh-count-changed');
+                        setTimeout(() => element.classList.remove('bh-count-changed'), 1500);
+                    }
+                });
+                // Borrow/reserve buttons depend on stock, so crossing zero needs a fresh page.
+                if ((available === 0) !== (data.availableCopies === 0) && notice) {
+                    $('[data-availability-message]', notice).textContent = data.availableCopies === 0
+                        ? 'Cuốn cuối cùng vừa được mượn – sách đã hết. Tải lại trang để đặt trước.'
+                        : 'Sách vừa có lại trong kho. Tải lại trang để mượn.';
+                    notice.classList.remove('d-none');
+                }
+                available = data.availableCopies;
+            } catch (error) {
+                // Background refresh only: keep the numbers already on screen, try again later.
+            }
+        };
+
+        const schedule = () => {
+            clearInterval(timer);
+            if (document.visibilityState === 'visible') timer = setInterval(refresh, AVAILABILITY_INTERVAL_MS);
+        };
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') refresh();
+            schedule();
+        });
+        $('[data-reload]', notice || document)?.addEventListener('click', () => window.location.reload());
+        schedule();
+    }
+
+    /* ------------------------------------------------------------------ */
     /* Small things                                                        */
     /* ------------------------------------------------------------------ */
 
@@ -525,6 +575,7 @@
         initCoverPreview();
         initSlug();
         initCsvCheck();
+        initAvailability();
         initAlerts();
         initHistoryBack();
     };

@@ -34,7 +34,8 @@ public class SecurityConfig {
                 ).permitAll()
 
                 .requestMatchers(
-                    HttpMethod.GET, "/books", "/books/**"
+                    HttpMethod.GET, "/books", "/books/**",
+                    "/api/books/*/availability"
                 ).permitAll()
 
                 .requestMatchers("/admin/**")

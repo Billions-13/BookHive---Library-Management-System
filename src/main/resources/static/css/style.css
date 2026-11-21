@@ -271,3 +271,17 @@ button[data-loading] {
     justify-content: center;
     background-color: rgba(255, 255, 255, 0.85);
 }
+
+/* Số lượng sách vừa được cập nhật (app.js) */
+.bh-count-changed {
+    animation: bhCountFlash 1.5s ease;
+}
+
+@keyframes bhCountFlash {
+    0% { background-color: #fff3cd; }
+    100% { background-color: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bh-count-changed, .blink-congrats, .sparkle-spinner, .arrow-home { animation: none; }
+}

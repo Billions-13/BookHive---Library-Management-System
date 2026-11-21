@@ -48,15 +48,23 @@
                 <p th:if="${!#strings.isEmpty(book.description)}" th:text="${book.description}" class="mb-3">Mô tả</p>
 
                 <!-- Stock counters -->
-                <div class="row g-2 mb-3 text-center" id="stockCounters">
+                <!-- /js/app.js refreshes these counters every 30 s from the availability API -->
+                <div class="row g-2 mb-3 text-center" id="stockCounters"
+                     th:attr="data-availability-url=@{/api/books/{id}/availability(id=${book.id})},data-available=${book.availableCopies}">
                     <div class="col-6 col-sm-3"><div class="border rounded-3 p-2">
-                        <div class="fs-4 fw-bold" th:text="${book.totalCopies}">0</div><div class="small text-muted">Tổng số cuốn</div></div></div>
+                        <div class="fs-4 fw-bold" th:text="${book.totalCopies}" data-count="totalCopies">0</div><div class="small text-muted">Tổng số cuốn</div></div></div>
                     <div class="col-6 col-sm-3"><div class="border rounded-3 p-2">
-                        <div class="fs-4 fw-bold text-success" th:text="${book.availableCopies}" id="availableCount">0</div><div class="small text-muted">Có thể mượn</div></div></div>
+                        <div class="fs-4 fw-bold text-success" th:text="${book.availableCopies}" id="availableCount" data-count="availableCopies">0</div><div class="small text-muted">Có thể mượn</div></div></div>
                     <div class="col-6 col-sm-3"><div class="border rounded-3 p-2">
-                        <div class="fs-4 fw-bold text-primary" th:text="${book.borrowedCopies}">0</div><div class="small text-muted">Đang được mượn</div></div></div>
+                        <div class="fs-4 fw-bold text-primary" th:text="${book.borrowedCopies}" data-count="borrowedCopies">0</div><div class="small text-muted">Đang được mượn</div></div></div>
                     <div class="col-6 col-sm-3"><div class="border rounded-3 p-2">
-                        <div class="fs-4 fw-bold text-danger" th:text="${book.damagedCopies}">0</div><div class="small text-muted">Hư hỏng</div></div></div>
+                        <div class="fs-4 fw-bold text-danger" th:text="${book.damagedCopies}" data-count="damagedCopies">0</div><div class="small text-muted">Hư hỏng</div></div></div>
+                </div>
+
+                <div class="alert alert-info d-none d-flex flex-wrap align-items-center justify-content-between gap-2 py-2"
+                     role="status" data-availability-changed>
+                    <span data-availability-message>Số lượng sách vừa thay đổi.</span>
+                    <button type="button" class="btn btn-sm btn-outline-dark" data-reload>Tải lại trang</button>
                 </div>
 
                 <!-- Borrow / reserve -->

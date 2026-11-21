@@ -250,6 +250,20 @@ class PageRenderingTest {
     }
 
     @Test
+    void availabilityApiIsPublic() throws Exception {
+        mvc.perform(get("/api/books/" + data.availableBookId + "/availability"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalCopies").value(3))
+            .andExpect(jsonPath("$.availableCopies").value(1))
+            .andExpect(jsonPath("$.borrowedCopies").value(1))
+            .andExpect(jsonPath("$.damagedCopies").value(1));
+        mvc.perform(get("/api/books/999999/availability")).andExpect(status().isNotFound());
+        mvc.perform(get("/books/" + data.availableBookId))
+            .andExpect(content().string(containsString(
+                "data-availability-url=\"/api/books/" + data.availableBookId + "/availability\"")));
+    }
+
+    @Test
     void accessRulesAreEnforced() throws Exception {
         mvc.perform(get("/my/loans")).andExpect(status().is3xxRedirection());
         mvc.perform(get("/librarian/loans").with(student())).andExpect(status().isForbidden());
