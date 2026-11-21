@@ -1,0 +1,125 @@
+:root {
+    --bh-primary: #ffc107;
+    --bh-primary-hover: #ffb300;
+    --bh-dark: #212529;
+}
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: var(--bh-dark);
+}
+
+.bh-navbar {
+    background-color: #ffffff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.bh-hero {
+    background: linear-gradient(135deg, #fff8db 0%, #ffe8a1 55%, #ffd43b 100%);
+    border-radius: 20px;
+    padding: 3.5rem 2rem;
+    box-shadow: 0 10px 30px rgba(255, 193, 7, 0.18);
+}
+
+.bh-book-card {
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.bh-book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+}
+
+.bh-book-cover {
+    height: 170px;
+    border-radius: 14px 14px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    background: linear-gradient(145deg, #fff3bf, #ffe066);
+}
+
+.bh-auth-card {
+    width: 100%;
+    max-width: 430px;
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+    background-color: #ffffff;
+    z-index: 1000;
+}
+
+@keyframes blinkGlow {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        text-shadow: 0 0 12px #ffc107, 0 0 24px #ff9800;
+    }
+    50% {
+        opacity: 0.45;
+        transform: scale(1.06);
+        text-shadow: 0 0 4px #ffc107;
+    }
+}
+
+@keyframes spinSparkle {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg) scale(0.8);
+    }
+    50% {
+        transform: translate(-50%, -50%) rotate(180deg) scale(1.15);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg) scale(0.8);
+    }
+}
+
+@keyframes floatArrow {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    50% {
+        transform: translateX(8px);
+    }
+}
+
+.blink-congrats {
+    animation: blinkGlow 1.1s infinite ease-in-out;
+}
+
+.sparkle-sky-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 999;
+    background: radial-gradient(circle at center, rgba(255, 193, 7, 0.14), rgba(0, 0, 0, 0.25));
+}
+
+.sparkle-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100vmax;
+    height: 100vmax;
+    animation: spinSparkle 7s linear infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    letter-spacing: 2.2rem;
+    text-align: center;
+    line-height: 4.5rem;
+    color: #ffe066;
+    text-shadow: 0 0 10px #ffd43b, 0 0 22px #fab005;
+}
+
+.arrow-home {
+    display: inline-block;
+    animation: floatArrow 0.9s infinite ease-in-out;
+}
