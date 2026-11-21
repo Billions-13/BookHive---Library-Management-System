@@ -67,7 +67,7 @@ public class MetadataService {
 
     @Transactional(readOnly = true)
     public AuthorForm authorForm(Long id) {
-        Author a = authors.findById(id).orElseThrow(() -> new NotFoundException("Author not found"));
+        Author a = authors.findById(id).orElseThrow(() -> new NotFoundException("Không tìm thấy tác giả"));
         AuthorForm f = new AuthorForm();
         f.setName(a.getName()); f.setCountry(a.getCountry()); f.setBirthYear(a.getBirthYear());
         f.setDeathYear(a.getDeathYear()); f.setBiography(a.getBiography()); f.setWebsite(a.getWebsite());
@@ -75,7 +75,7 @@ public class MetadataService {
     }
     @Transactional(readOnly = true)
     public CategoryForm categoryForm(Long id) {
-        Category c = categories.findById(id).orElseThrow(() -> new NotFoundException("Category not found"));
+        Category c = categories.findById(id).orElseThrow(() -> new NotFoundException("Không tìm thấy thể loại"));
         CategoryForm f = new CategoryForm();
         f.setName(c.getName()); f.setSlug(c.getSlug()); f.setDescription(c.getDescription());
         f.setTargetAudience(c.getTargetAudience()); f.setDisplayOrder(c.getDisplayOrder());
@@ -84,11 +84,11 @@ public class MetadataService {
     @Transactional
     public void saveAuthor(Long id, AuthorForm f) {
         Author a = id == null ? new Author() : authors.findById(id)
-            .orElseThrow(() -> new NotFoundException("Author not found"));
+            .orElseThrow(() -> new NotFoundException("Không tìm thấy tác giả"));
         if (f.getBirthYear() != null && f.getDeathYear() != null && f.getDeathYear() < f.getBirthYear())
-            throw new IllegalArgumentException("Death year cannot precede birth year");
+            throw new IllegalArgumentException("Năm mất không thể trước năm sinh");
         if (id == null && authors.existsByName(f.getName().trim()))
-            throw new IllegalArgumentException("Author already exists");
+            throw new IllegalArgumentException("Tác giả này đã tồn tại");
         a.setName(f.getName().trim()); a.setCountry(f.getCountry());
         a.setBirthYear(f.getBirthYear()); a.setDeathYear(f.getDeathYear());
         a.setBiography(f.getBiography()); a.setWebsite(f.getWebsite());
@@ -98,9 +98,9 @@ public class MetadataService {
     @Transactional
     public void saveCategory(Long id, CategoryForm f) {
         Category c = id == null ? new Category() : categories.findById(id)
-            .orElseThrow(() -> new NotFoundException("Category not found"));
+            .orElseThrow(() -> new NotFoundException("Không tìm thấy thể loại"));
         if (id == null && (categories.existsByName(f.getName().trim()) || categories.existsBySlug(f.getSlug().trim())))
-            throw new IllegalArgumentException("Category name/slug already exists");
+            throw new IllegalArgumentException("Tên hoặc slug thể loại đã tồn tại");
         c.setName(f.getName().trim()); c.setSlug(f.getSlug().trim());
         c.setDescription(f.getDescription()); c.setTargetAudience(f.getTargetAudience());
         c.setDisplayOrder(f.getDisplayOrder()); categories.saveAndFlush(c);
@@ -108,13 +108,13 @@ public class MetadataService {
     }
     @Transactional
     public void archiveAuthor(Long id) {
-        Author a = authors.findById(id).orElseThrow(() -> new NotFoundException("Author not found"));
+        Author a = authors.findById(id).orElseThrow(() -> new NotFoundException("Không tìm thấy tác giả"));
         a.setActive(false);
         audit.log(current.requireUser(), "AUTHOR_ARCHIVED", "Author", id, a.getName());
     }
     @Transactional
     public void archiveCategory(Long id) {
-        Category c = categories.findById(id).orElseThrow(() -> new NotFoundException("Category not found"));
+        Category c = categories.findById(id).orElseThrow(() -> new NotFoundException("Không tìm thấy thể loại"));
         c.setActive(false);
         audit.log(current.requireUser(), "CATEGORY_ARCHIVED", "Category", id, c.getName());
     }

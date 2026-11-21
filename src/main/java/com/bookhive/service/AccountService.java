@@ -38,10 +38,10 @@ public class AccountService {
     public void changePassword(PasswordForm form) {
         User user = current.requireUser();
         if (!encoder.matches(form.getOldPassword(), user.getPasswordHash()))
-            throw new IllegalArgumentException("Current password is incorrect");
+            throw new IllegalArgumentException("Mật khẩu hiện tại không đúng");
         if (form.getNewPassword() == null || form.getNewPassword().length() < 8 ||
             form.getNewPassword().length() > 72)
-            throw new IllegalArgumentException("New password must be 8–72 characters");
+            throw new IllegalArgumentException("Mật khẩu mới phải dài từ 8 đến 72 ký tự");
         user.setPasswordHash(encoder.encode(form.getNewPassword()));
         audit.log(user, "PASSWORD_CHANGED", "User", user.getId(), "Changed own password");
     }
@@ -81,9 +81,9 @@ public class AccountService {
     @Transactional
     public Long createUser(AdminUserForm f) {
         if (f.getPassword() == null || f.getPassword().length() < 8 || f.getPassword().length() > 72)
-            throw new IllegalArgumentException("Password must be 8–72 characters");
+            throw new IllegalArgumentException("Mật khẩu phải dài từ 8 đến 72 ký tự");
         String email = f.getEmail().trim().toLowerCase(Locale.ROOT);
-        if (users.existsByEmail(email)) throw new IllegalArgumentException("Email already exists");
+        if (users.existsByEmail(email)) throw new IllegalArgumentException("Email này đã được sử dụng");
         User u = new User();
         apply(u, f); u.setEmail(email);
         u.setPasswordHash(encoder.encode(f.getPassword()));
@@ -95,14 +95,14 @@ public class AccountService {
     public void editUser(Long id, AdminUserForm f) {
         User u = user(id);
         String email = f.getEmail().trim().toLowerCase(Locale.ROOT);
-        if (users.existsByEmailAndIdNot(email, id)) throw new IllegalArgumentException("Email already exists");
+        if (users.existsByEmailAndIdNot(email, id)) throw new IllegalArgumentException("Email này đã được sử dụng");
         if (current.requireUser().getId().equals(id) &&
             (!f.isEnabled() || f.getRole() != RoleName.ADMIN))
-            throw new IllegalArgumentException("Cannot disable/demote your own admin account");
+            throw new IllegalArgumentException("Không thể tự khoá hoặc hạ quyền tài khoản quản trị của chính bạn");
         apply(u, f); u.setEmail(email);
         if (f.getPassword() != null && !f.getPassword().isBlank()) {
             if (f.getPassword().length() < 8 || f.getPassword().length() > 72)
-                throw new IllegalArgumentException("Password must be 8–72 characters");
+                throw new IllegalArgumentException("Mật khẩu phải dài từ 8 đến 72 ký tự");
             u.setPasswordHash(encoder.encode(f.getPassword()));
         }
         audit.log(current.requireUser(), "USER_UPDATED", "User", id, email);
@@ -111,19 +111,19 @@ public class AccountService {
     public void toggle(Long id) {
         User u = user(id);
         if (current.requireUser().getId().equals(id))
-            throw new IllegalArgumentException("Cannot lock own admin account");
+            throw new IllegalArgumentException("Không thể tự khoá tài khoản quản trị của chính bạn");
         u.setEnabled(!u.isEnabled());
         audit.log(current.requireUser(), "USER_ENABLED_CHANGED", "User", id, String.valueOf(u.isEnabled()));
     }
     private User user(Long id) {
-        return users.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
+        return users.findById(id).orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
     }
     private void apply(User u, AdminUserForm f) {
         u.setFullName(f.getFullName().trim());
         u.setPhone(f.getPhone());
         u.setStudentCode(f.getStudentCode() == null || f.getStudentCode().isBlank() ? null : f.getStudentCode().trim());
-        if (f.getRole() == null) throw new IllegalArgumentException("Role is required");
-        u.setRole(roles.findByName(f.getRole()).orElseThrow(() -> new IllegalArgumentException("Role not found")));
+        if (f.getRole() == null) throw new IllegalArgumentException("Vui lòng chọn vai trò");
+        u.setRole(roles.findByName(f.getRole()).orElseThrow(() -> new IllegalArgumentException("Vai trò không tồn tại")));
         u.setEnabled(f.isEnabled());
     }
 }

@@ -22,7 +22,7 @@ public class CatalogCsvService {
     @Transactional
     public int importCsv(MultipartFile file) throws IOException {
         if (file.isEmpty() || file.getSize() > 2_000_000)
-            throw new IllegalArgumentException("Choose a CSV file no larger than 2 MB");
+            throw new IllegalArgumentException("Hãy chọn một file CSV không quá 2 MB");
         var csv = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true)
             .setIgnoreSurroundingSpaces(true).get();
         int count = 0;
@@ -30,18 +30,18 @@ public class CatalogCsvService {
              CSVParser parser = csv.parse(reader)) {
             Map<String, Integer> hdr = parser.getHeaderMap();
             if (!hdr.keySet().containsAll(List.of("isbn", "title", "publisher", "publication_year", "language")))
-                throw new IllegalArgumentException("Required columns: isbn,title,publisher,publication_year,language");
+                throw new IllegalArgumentException("File phải có đủ các cột: isbn,title,publisher,publication_year,language");
             for (CSVRecord r : parser) {
-                if (++count > 1000) throw new IllegalArgumentException("Maximum 1000 books per CSV");
+                if (++count > 1000) throw new IllegalArgumentException("Mỗi file CSV tối đa 1000 đầu sách");
                 BookForm f = new BookForm();
                 f.setIsbn(r.get("isbn")); f.setTitle(r.get("title"));
                 f.setPublisher(r.get("publisher")); f.setLanguage(r.get("language"));
                 if (!r.get("publication_year").isBlank()) {
                     try { f.setPublicationYear(Integer.valueOf(r.get("publication_year"))); }
-                    catch (NumberFormatException ex) { throw new IllegalArgumentException("Invalid year on line " + r.getRecordNumber()); }
+                    catch (NumberFormatException ex) { throw new IllegalArgumentException("Năm xuất bản không hợp lệ ở dòng " + r.getRecordNumber()); }
                 }
                 if (f.getIsbn().isBlank() || f.getTitle().isBlank())
-                    throw new IllegalArgumentException("Missing ISBN/title on line " + r.getRecordNumber());
+                    throw new IllegalArgumentException("Thiếu ISBN hoặc tên sách ở dòng " + r.getRecordNumber());
                 books.create(f);
             }
         }

@@ -23,14 +23,14 @@ public class ReservationService {
     public Long reserve(Long bookId, User reader) {
         if (!reader.isEnabled() ||
             (reader.getRole().getName() != RoleName.STUDENT && reader.getRole().getName() != RoleName.LECTURER))
-            throw new IllegalArgumentException("Only active students/lecturers can reserve");
-        Book book = books.lockById(bookId).orElseThrow(() -> new NotFoundException("Book not found"));
-        if (!book.isActive()) throw new IllegalArgumentException("Book is archived");
+            throw new IllegalArgumentException("Chỉ sinh viên và giảng viên đang hoạt động được đặt trước");
+        Book book = books.lockById(bookId).orElseThrow(() -> new NotFoundException("Không tìm thấy đầu sách"));
+        if (!book.isActive()) throw new IllegalArgumentException("Đầu sách đã bị ẩn");
         if (copies.countByBatchBookIdAndStatus(bookId, CopyStatus.AVAILABLE) > 0)
-            throw new IllegalArgumentException("Copies are available; borrow instead of reserving");
+            throw new IllegalArgumentException("Sách vẫn còn trong kho; hãy mượn trực tiếp thay vì đặt trước");
         if (reservations.existsByBookIdAndUserIdAndStatusIn(bookId, reader.getId(),
                 List.of(ReservationStatus.REQUESTED, ReservationStatus.WAITING, ReservationStatus.READY)))
-            throw new IllegalArgumentException("You already have a reservation for this title");
+            throw new IllegalArgumentException("Bạn đã đặt trước đầu sách này rồi");
         Reservation r = new Reservation();
         r.setBook(book); r.setUser(reader); r.setReservedAt(LocalDateTime.now());
         r.setStatus(ReservationStatus.WAITING);
@@ -47,13 +47,13 @@ public class ReservationService {
     @Transactional
     public void cancel(Long reservationId, User reader) {
         Reservation r = reservations.findById(reservationId)
-            .orElseThrow(() -> new NotFoundException("Reservation not found"));
+            .orElseThrow(() -> new NotFoundException("Không tìm thấy lượt đặt trước"));
         books.lockById(r.getBook().getId());
         if (!r.getUser().getId().equals(reader.getId()))
-            throw new IllegalArgumentException("You cannot cancel someone else's reservation");
+            throw new IllegalArgumentException("Bạn không thể huỷ lượt đặt trước của người khác");
         if (r.getStatus() != ReservationStatus.WAITING && r.getStatus() != ReservationStatus.READY &&
             r.getStatus() != ReservationStatus.REQUESTED)
-            throw new IllegalArgumentException("Reservation cannot be cancelled");
+            throw new IllegalArgumentException("Lượt đặt trước này không thể huỷ");
         BookCopy held = r.getCopy();
         r.setCopy(null); r.setHoldUntil(null); r.setStatus(ReservationStatus.CANCELLED);
         if (held != null) {

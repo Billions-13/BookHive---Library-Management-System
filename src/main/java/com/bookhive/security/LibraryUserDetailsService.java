@@ -22,7 +22,7 @@ public class LibraryUserDetailsService
         User user = userRepository.findByEmail(email)
             .orElseThrow(() ->
                 new UsernameNotFoundException(
-                    "Invalid credentials"
+                    "Email hoặc mật khẩu không đúng"
                 )
             );
 

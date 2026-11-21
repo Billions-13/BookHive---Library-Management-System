@@ -17,7 +17,7 @@ public class ErrorControllerAdvice {
     public String badRequest(Exception ex, Model model) {
         // Do not print database exception details to the browser.
         if (ex instanceof DataIntegrityViolationException || ex instanceof ObjectOptimisticLockingFailureException)
-            model.addAttribute("error", "Concurrent change or conflicting data. Please retry.");
+            model.addAttribute("error", "Dữ liệu vừa bị thay đổi hoặc bị trùng. Vui lòng tải lại trang và thử lại.");
         else model.addAttribute("error", ex.getMessage());
         return "error/generic";
     }

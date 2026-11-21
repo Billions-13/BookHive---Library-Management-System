@@ -22,6 +22,6 @@ public class BookForm {
     private String language;
     private String description;
     @Size(max = 500)
-    @Pattern(regexp = "^(https?://.+)?$", message = "Cover URL must start with http:// or https://")
+    @Pattern(regexp = "^(https?://.+)?$", message = "Link ảnh bìa phải bắt đầu bằng http:// hoặc https://")
     private String coverUrl;
 }

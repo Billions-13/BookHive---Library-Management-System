@@ -32,7 +32,7 @@ public class InventoryController {
     public String receive(@PathVariable Long bookId,
              @Valid @ModelAttribute("batchForm") BatchForm form, BindingResult errors, Model m) {
         if (errors.hasErrors()) {
-            m.addAttribute("error", "Invalid batch quantity or supplier");
+            m.addAttribute("error", "Số lượng hoặc nhà cung cấp của lô nhập không hợp lệ");
             m.addAttribute("book", books.details(bookId));
             m.addAttribute("batches", inventory.batches(bookId));
             m.addAttribute("copies", inventory.copies(bookId));

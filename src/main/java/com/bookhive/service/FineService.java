@@ -26,9 +26,9 @@ public class FineService {
     @Transactional
     public void updateStatus(Long fineId, FineStatus status) {
         if (status != FineStatus.PAID && status != FineStatus.WAIVED)
-            throw new IllegalArgumentException("Only PAID or WAIVED permitted");
-        Fine fine = fines.findById(fineId).orElseThrow(() -> new NotFoundException("Fine not found"));
-        if (fine.getStatus() != FineStatus.UNPAID) throw new IllegalArgumentException("Fine already resolved");
+            throw new IllegalArgumentException("Chỉ được chọn Đã thu tiền hoặc Miễn phạt");
+        Fine fine = fines.findById(fineId).orElseThrow(() -> new NotFoundException("Không tìm thấy khoản phạt"));
+        if (fine.getStatus() != FineStatus.UNPAID) throw new IllegalArgumentException("Khoản phạt này đã được xử lý");
         fine.setStatus(status);
         if (status == FineStatus.PAID) fine.setPaidAt(LocalDateTime.now());
         audit.log(current.requireUser(), "FINE_RESOLVED", "Fine", fineId, status.name());

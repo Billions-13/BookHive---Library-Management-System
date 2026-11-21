@@ -26,9 +26,9 @@ public class InventoryService {
     @Transactional
     public Long receive(Long bookId, BatchForm form) {
         if (form.getQuantity() == null || form.getQuantity() < 1 || form.getQuantity() > 1000)
-            throw new IllegalArgumentException("Quantity must be 1–1000");
-        Book book = books.lockById(bookId).orElseThrow(() -> new NotFoundException("Book not found"));
-        if (!book.isActive()) throw new IllegalArgumentException("Book is archived");
+            throw new IllegalArgumentException("Số lượng phải từ 1 đến 1000");
+        Book book = books.lockById(bookId).orElseThrow(() -> new NotFoundException("Không tìm thấy đầu sách"));
+        if (!book.isActive()) throw new IllegalArgumentException("Đầu sách đã bị ẩn");
         User actor = current.requireUser();
         BookBatch batch = new BookBatch();
         batch.setBook(book);
@@ -71,16 +71,16 @@ public class InventoryService {
     public void changeStatus(Long bookId, Long copyId, CopyStatus status, String note) {
         if (status != CopyStatus.AVAILABLE && status != CopyStatus.DAMAGED &&
             status != CopyStatus.LOST && status != CopyStatus.DISCARDED)
-            throw new IllegalArgumentException("Use borrowing/reservation flows for status changes");
+            throw new IllegalArgumentException("Trạng thái này chỉ thay đổi qua quy trình mượn/trả hoặc đặt trước");
         BookCopy copy = copies.lockById(copyId)
-            .orElseThrow(() -> new NotFoundException("Copy not found"));
+            .orElseThrow(() -> new NotFoundException("Không tìm thấy cuốn sách"));
         if (!copy.getBatch().getBook().getId().equals(bookId))
-            throw new IllegalArgumentException("Copy does not belong to this book");
+            throw new IllegalArgumentException("Cuốn sách này không thuộc đầu sách đang xem");
         if (loans.existsByCopyIdAndStatus(copyId, LoanStatus.ACTIVE) ||
             copy.getStatus() == CopyStatus.BORROWED || copy.getStatus() == CopyStatus.RESERVED)
-            throw new IllegalArgumentException("Cannot change a borrowed or reserved copy");
+            throw new IllegalArgumentException("Không thể đổi trạng thái cuốn đang được mượn hoặc đang giữ chỗ");
         if (copy.getStatus() == CopyStatus.DISCARDED)
-            throw new IllegalArgumentException("Already discarded; import a new copy instead");
+            throw new IllegalArgumentException("Cuốn này đã thanh lý; hãy nhập lô sách mới");
         copy.setStatus(status);
         copy.setConditionNote(note);
         if (status == CopyStatus.DISCARDED) copy.setRemovedAt(LocalDateTime.now());
@@ -90,7 +90,7 @@ public class InventoryService {
     @Transactional
     public void discardBatch(Long batchId) {
         BookBatch batch = batches.findById(batchId)
-            .orElseThrow(() -> new NotFoundException("Batch not found"));
+            .orElseThrow(() -> new NotFoundException("Không tìm thấy lô sách"));
         // Lock the book so issuance and batch replacement cannot race.
         books.lockById(batch.getBook().getId());
         User actor = current.requireUser();
@@ -98,7 +98,7 @@ public class InventoryService {
         for (BookCopy c : all) {
             if (c.getStatus() == CopyStatus.BORROWED || c.getStatus() == CopyStatus.RESERVED ||
                 loans.existsByCopyIdAndStatus(c.getId(), LoanStatus.ACTIVE))
-                throw new IllegalArgumentException("Cannot replace a batch with borrowed/reserved copies");
+                throw new IllegalArgumentException("Không thể thanh lý lô còn cuốn đang được mượn hoặc đang giữ chỗ");
         }
         for (BookCopy c : all) {
             if (c.getStatus() != CopyStatus.DISCARDED) {

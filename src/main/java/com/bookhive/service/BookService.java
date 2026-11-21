@@ -123,7 +123,7 @@ public class BookService {
         if (copies.countByBatchBookId(id) > 0 &&
             (!b.getIsbn().equals(f.getIsbn().trim()) ||
              !java.util.Objects.equals(b.getEdition(), f.getEdition())))
-            throw new IllegalArgumentException("Different ISBN/edition requires a new book title and a new batch");
+            throw new IllegalArgumentException("ISBN/phiên bản khác cần tạo đầu sách mới và nhập lô mới");
         if (books.existsByIsbnAndIdNot(f.getIsbn().trim(), id))
             throw new IllegalArgumentException("ISBN already exists");
         apply(b, f);
@@ -138,14 +138,14 @@ public class BookService {
                 com.bookhive.enums.ReservationStatus.WAITING,
                 com.bookhive.enums.ReservationStatus.REQUESTED,
                 com.bookhive.enums.ReservationStatus.READY)))
-            throw new IllegalArgumentException("Cannot archive a book with active loans/holds/reservations");
+            throw new IllegalArgumentException("Không thể ẩn đầu sách đang có phiếu mượn, sách đang giữ hoặc đặt trước chưa xử lý");
         b.setActive(false);
         audit.log(current.requireUser(), "BOOK_ARCHIVED", "Book", id, b.getIsbn());
     }
     @Transactional(readOnly = true)
     public Book findActive(Long id) {
-        Book b = books.findById(id).orElseThrow(() -> new NotFoundException("Book not found"));
-        if (!b.isActive()) throw new NotFoundException("Book is archived");
+        Book b = books.findById(id).orElseThrow(() -> new NotFoundException("Không tìm thấy đầu sách"));
+        if (!b.isActive()) throw new NotFoundException("Đầu sách đã bị ẩn");
         return b;
     }
     private void validate(BookForm f) {
@@ -154,14 +154,14 @@ public class BookService {
             throw new IllegalArgumentException("ISBN and title required (within length limits)");
         if (f.getPublicationYear() != null &&
             (f.getPublicationYear() < 1400 || f.getPublicationYear() > 2100))
-            throw new IllegalArgumentException("Invalid publication year");
+            throw new IllegalArgumentException("Năm xuất bản không hợp lệ");
         if (f.getPublisher() != null && f.getPublisher().length() > 150)
-            throw new IllegalArgumentException("Publisher too long");
+            throw new IllegalArgumentException("Tên nhà xuất bản quá dài");
         if (f.getLanguage() != null && f.getLanguage().length() > 50)
-            throw new IllegalArgumentException("Language too long");
+            throw new IllegalArgumentException("Ngôn ngữ quá dài");
         if (f.getCoverUrl() != null && !f.getCoverUrl().isBlank() &&
             !(f.getCoverUrl().startsWith("https://") || f.getCoverUrl().startsWith("http://")))
-            throw new IllegalArgumentException("Invalid cover URL");
+            throw new IllegalArgumentException("Link ảnh bìa không hợp lệ");
     }
     private void apply(Book b, BookForm f) {
         b.setIsbn(f.getIsbn().trim()); b.setTitle(f.getTitle().trim());

@@ -20,7 +20,7 @@ public class CatalogCsvController {
     @PostMapping("/import")
     public String upload(@RequestParam("file") MultipartFile file, Model m) throws IOException {
         try {
-            m.addAttribute("result", "Imported " + csv.importCsv(file) + " books");
+            m.addAttribute("result", "Đã nhập thành công " + csv.importCsv(file) + " đầu sách");
         } catch (IllegalArgumentException ex) {
             m.addAttribute("error", ex.getMessage());
         }

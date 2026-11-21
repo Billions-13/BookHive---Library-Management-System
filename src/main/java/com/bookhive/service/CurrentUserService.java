@@ -15,6 +15,6 @@ public class CurrentUserService {
     public User requireUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return users.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Account not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy tài khoản"));
     }
 }

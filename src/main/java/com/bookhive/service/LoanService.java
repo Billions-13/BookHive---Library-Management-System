@@ -27,29 +27,29 @@ public class LoanService {
 
     @Transactional
     public Long borrow(Long bookId, Long readerId, User issuedBy) {
-        Book book = books.lockById(bookId).orElseThrow(() -> new NotFoundException("Book not found"));
-        if (!book.isActive()) throw new IllegalArgumentException("Book is archived");
-        User reader = users.findById(readerId).orElseThrow(() -> new NotFoundException("Reader not found"));
-        if (!reader.isEnabled()) throw new IllegalArgumentException("Reader is disabled");
+        Book book = books.lockById(bookId).orElseThrow(() -> new NotFoundException("Không tìm thấy đầu sách"));
+        if (!book.isActive()) throw new IllegalArgumentException("Đầu sách đã bị ẩn");
+        User reader = users.findById(readerId).orElseThrow(() -> new NotFoundException("Không tìm thấy bạn đọc"));
+        if (!reader.isEnabled()) throw new IllegalArgumentException("Tài khoản bạn đọc đang bị khoá");
         if (reader.getRole().getName() != RoleName.STUDENT &&
             reader.getRole().getName() != RoleName.LECTURER)
-            throw new IllegalArgumentException("Only students/lecturers can borrow");
+            throw new IllegalArgumentException("Chỉ sinh viên và giảng viên được mượn sách");
         if (loans.countByUserIdAndStatus(readerId, LoanStatus.ACTIVE) >= reader.getRole().getLoanLimit())
-            throw new IllegalArgumentException("Loan limit reached");
+            throw new IllegalArgumentException("Bạn đọc đã mượn đủ số sách tối đa theo vai trò");
         BookCopy copy;
         var ready = queue.readyFor(bookId, readerId);
         if (ready.isPresent()) {
             Reservation r = ready.get();
             copy = copies.lockById(r.getCopy().getId())
-                .orElseThrow(() -> new NotFoundException("Copy not found"));
-            if (copy.getStatus() != CopyStatus.RESERVED) throw new IllegalArgumentException("Hold is unavailable");
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy cuốn sách"));
+            if (copy.getStatus() != CopyStatus.RESERVED) throw new IllegalArgumentException("Cuốn sách giữ cho bạn đọc không còn khả dụng");
             r.setStatus(ReservationStatus.FULFILLED);
             r.setHoldUntil(null);
         } else {
             if (queue.hasWaitingQueue(bookId))
-                throw new IllegalArgumentException("Existing reservation queue must be served first");
+                throw new IllegalArgumentException("Sách đang có người đặt trước; cần phục vụ hàng đợi trước");
             copy = copies.lockAvailable(bookId, CopyStatus.AVAILABLE, PageRequest.of(0, 1))
-                .stream().findFirst().orElseThrow(() -> new IllegalArgumentException("No copies available"));
+                .stream().findFirst().orElseThrow(() -> new IllegalArgumentException("Hết sách – hiện không có sách để mượn"));
         }
         copy.setStatus(CopyStatus.BORROWED);
         Loan loan = new Loan();
@@ -66,12 +66,12 @@ public class LoanService {
     @Transactional
     public void returnCopy(Long loanId, User returnedBy) {
         Loan firstRead = loans.findById(loanId)
-            .orElseThrow(() -> new NotFoundException("Loan not found"));
+            .orElseThrow(() -> new NotFoundException("Không tìm thấy phiếu mượn"));
         books.lockById(firstRead.getCopy().getBatch().getBook().getId());
-        Loan loan = loans.lockById(loanId).orElseThrow(() -> new NotFoundException("Loan not found"));
-        if (loan.getStatus() != LoanStatus.ACTIVE) throw new IllegalArgumentException("Loan already returned");
+        Loan loan = loans.lockById(loanId).orElseThrow(() -> new NotFoundException("Không tìm thấy phiếu mượn"));
+        if (loan.getStatus() != LoanStatus.ACTIVE) throw new IllegalArgumentException("Phiếu mượn này đã được trả");
         BookCopy copy = copies.lockById(loan.getCopy().getId())
-            .orElseThrow(() -> new NotFoundException("Copy not found"));
+            .orElseThrow(() -> new NotFoundException("Không tìm thấy cuốn sách"));
         loan.setReturnDate(LocalDate.now());
         loan.setReturnedBy(returnedBy);
         loan.setStatus(LoanStatus.RETURNED);
@@ -81,10 +81,10 @@ public class LoanService {
             Fine fine = fines.findByLoanId(loanId).orElseGet(Fine::new);
             fine.setLoan(loan);
             if (fine.getId() != null && fine.getStatus() != FineStatus.UNPAID)
-                throw new IllegalArgumentException("Loan fine already settled; staff review required");
+                throw new IllegalArgumentException("Khoản phạt của phiếu này đã được xử lý; cần thủ thư kiểm tra lại");
             fine.setAmount(amount);
             fine.setStatus(FineStatus.UNPAID);
-            fine.setNotes(daysLate + " day(s) late at " + DAILY_FINE_VND + " VND/day");
+            fine.setNotes("Trả trễ " + daysLate + " ngày × " + DAILY_FINE_VND + " ₫/ngày");
             fines.save(fine);
         }
         queue.offerToNext(copy);
