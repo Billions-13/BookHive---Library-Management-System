@@ -1,37 +1,50 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng Nhập - BookHive</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/css/style.css}" href="/css/style.css" rel="stylesheet">
 </head>
-<body class="bg-light d-flex align-items-center justify-content-center vh-100">
-    <div class="card shadow border-0 p-4" style="width: 400px;">
-        <h3 class="text-center fw-bold text-warning mb-2">📚 BookHive</h3>
-        <h5 class="text-center mb-4">Đăng Nhập</h5>
-
-        <!-- 1. THÔNG BÁO LỖI (Sẽ hiển thị khi đăng nhập sai) -->
-        <!-- Sau này Spring Boot/Thymeleaf sẽ bật/tắt khung alert này -->
-        <div class="alert alert-danger text-center p-2 small mb-3 d-none" id="errorMessage">
-            Tên đăng nhập hoặc mật khẩu không chính xác!
+<body class="d-flex align-items-center justify-content-center min-vh-100 p-3">
+    <div class="card bh-auth-card p-4">
+        <div class="text-center mb-3">
+            <a th:href="@{/}" href="index.html" class="text-decoration-none fw-bold text-warning fs-3">📚 BookHive</a>
+            <h5 class="mt-2 mb-0 fw-bold">Đăng Nhập Tài Khoản</h5>
         </div>
 
-        <form action="/login" method="POST">
+        <!-- Thông báo đăng nhập sai -->
+        <div class="alert alert-danger text-center p-2 small mb-3"
+             th:classappend="${param.error == null} ? 'd-none' : ''"
+             id="errorMessage">
+            Sai tên đăng nhập hoặc mật khẩu! Vui lòng kiểm tra lại.
+        </div>
+
+        <!-- Thông báo chưa có tài khoản kèm nút chuyển sang Đăng ký -->
+        <div class="alert alert-warning border-warning text-center p-2 small mb-3"
+             th:classappend="${param.notFound == null} ? 'd-none' : ''"
+             id="notFoundAlert">
+            Tài khoản chưa tồn tại! <a th:href="@{/register}" href="register.html" class="fw-bold text-dark text-decoration-underline">Chuyển tới trang đăng ký</a>.
+        </div>
+
+        <form th:action="@{/login}" action="/login" method="POST">
             <div class="mb-3">
-                <label class="form-label">Mã số sinh viên / Email</label>
+                <label class="form-label fw-semibold">Mã số sinh viên / Email</label>
                 <input type="text" name="username" class="form-control" placeholder="Nhập MSSV hoặc Email..." required>
             </div>
             <div class="mb-3">
-                <label class="form-label">Mật khẩu</label>
+                <label class="form-label fw-semibold">Mật khẩu</label>
                 <input type="password" name="password" class="form-control" placeholder="••••••••" required>
             </div>
-            <button type="submit" class="btn btn-warning w-100 fw-bold mt-2">Đăng nhập</button>
+            <button type="submit" class="btn btn-warning w-100 fw-bold py-2 mt-1">Đăng nhập</button>
         </form>
 
-        <!-- 2. NÚT CHUYỂN SANG TRANG ĐĂNG KÝ -->
         <div class="text-center mt-3">
-            <small>Chưa có tài khoản? <a href="register.html" class="text-warning fw-bold">Đăng ký ngay</a></small>
+            <small class="text-muted">Chưa có tài khoản? <a th:href="@{/register}" href="register.html" class="text-warning fw-bold text-decoration-none">Đăng ký ngay</a></small>
+        </div>
+        <div class="text-center mt-2">
+            <a th:href="@{/}" href="index.html" class="small text-secondary text-decoration-none">← Quay lại trang chủ</a>
         </div>
     </div>
 </body>
