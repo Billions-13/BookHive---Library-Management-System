@@ -1,19 +1,120 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Manage Users</title></head><body>
-<h1>Users</h1>
-<form th:action="@{/admin/users}" method="get">
-<label>Name <input name="name" th:value="${name}"></label>
-<label>Email <input name="email" th:value="${email}"></label>
-<label>Student code <input name="studentCode" th:value="${studentCode}"></label>
-<label>Role <select name="role"><option value="">Any</option><option th:each="r : ${roles}" th:value="${r}" th:text="${r}"></option></select></label>
-<label>Enabled <select name="enabled"><option value="">Any</option><option value="true">Yes</option><option value="false">No</option></select></label>
-<label>Sort <select name="sort"><option value="id">ID</option><option value="fullName">Full name</option><option value="email">Email</option><option value="studentCode">Student code</option></select></label>
-<label>Direction <select name="direction"><option>asc</option><option>desc</option></select></label>
-<label>Size <select name="size"><option>10</option><option>20</option><option>50</option><option>100</option></select></label><button>Filter</button></form>
-<p><a th:if="${pages.hasPrevious()}" th:href="@{/admin/users(page=${pages.number - 1},size=${size},name=${name},email=${email},role=${selectedRole},enabled=${selectedEnabled},studentCode=${studentCode},sort=${sort},direction=${direction})}">Previous</a>
-Page <span th:text="${pages.totalPages == 0 ? 0 : pages.number + 1}"></span>/<span th:text="${pages.totalPages}"></span>
-<a th:if="${pages.hasNext()}" th:href="@{/admin/users(page=${pages.number + 1},size=${size},name=${name},email=${email},role=${selectedRole},enabled=${selectedEnabled},studentCode=${studentCode},sort=${sort},direction=${direction})}">Next</a></p><p><a th:href="@{/admin/users/new}">Create user</a></p>
-<table border="1"><tr><th>Full name</th><th>Email</th><th>Role</th><th>Enabled</th><th>Actions</th></tr>
-<tr th:each="u : ${users}"><td th:text="${u.fullName}"></td><td th:text="${u.email}"></td><td th:text="${u.role.name}"></td>
-<td th:text="${u.enabled}"></td><td><a th:href="@{/admin/users/{id}/edit(id=${u.id})}">Edit</a>
-<form th:action="@{/admin/users/{id}/toggle(id=${u.id})}" method="post"><button th:text="${u.enabled ? 'Lock' : 'Unlock'}"></button></form></td></tr></table></body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Quản trị người dùng')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1" th:with="now=${#temporals.createNow()}">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Quản trị người dùng</li>
+        </ol>
+    </nav>
+
+    <div class="bh-page-header">
+        <h1>Quản trị người dùng</h1>
+        <a class="btn btn-warning fw-semibold" th:href="@{/admin/users/new}">+ Tạo tài khoản</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <form class="bh-card p-3 mb-3" th:action="@{/admin/users}" method="get">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-3">
+                <label class="form-label small mb-1" for="name">Họ tên</label>
+                <input class="form-control form-control-sm" id="name" name="name" th:value="${name}">
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label small mb-1" for="email">Email</label>
+                <input class="form-control form-control-sm" id="email" name="email" th:value="${email}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="studentCode">MSSV</label>
+                <input class="form-control form-control-sm" id="studentCode" name="studentCode" th:value="${studentCode}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="role">Vai trò</label>
+                <select class="form-select form-select-sm" id="role" name="role" data-autosubmit>
+                    <option value="" th:selected="${selectedRole == null}">Tất cả</option>
+                    <option th:each="r : ${roles}" th:value="${r}" th:text="#{${'role.' + r}}"
+                            th:selected="${selectedRole == r}">Vai trò</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="enabled">Trạng thái</label>
+                <select class="form-select form-select-sm" id="enabled" name="enabled" data-autosubmit>
+                    <option value="" th:selected="${selectedEnabled == null}">Tất cả</option>
+                    <option value="true" th:selected="${selectedEnabled == true}">Đang hoạt động</option>
+                    <option value="false" th:selected="${selectedEnabled == false}">Đã khoá</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="sort">Sắp xếp theo</label>
+                <select class="form-select form-select-sm" id="sort" name="sort" data-autosubmit>
+                    <option value="id" th:selected="${sort == 'id'}">Mã</option>
+                    <option value="fullName" th:selected="${sort == 'fullName'}">Họ tên</option>
+                    <option value="email" th:selected="${sort == 'email'}">Email</option>
+                    <option value="studentCode" th:selected="${sort == 'studentCode'}">MSSV</option>
+                </select>
+            </div>
+            <div th:replace="~{fragments/layout :: direction(${direction})}"></div>
+            <div th:replace="~{fragments/layout :: page-size(${size})}"></div>
+            <div class="col-6 col-md-2 d-grid">
+                <button class="btn btn-sm btn-dark" type="submit">Lọc</button>
+            </div>
+            <div class="col-6 col-md-2 d-grid">
+                <a class="btn btn-sm btn-outline-secondary" th:href="@{/admin/users}">Xoá bộ lọc</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="bh-card">
+        <div th:if="${#lists.isEmpty(users)}" class="bh-empty">
+            <span class="bh-empty-icon">👤</span>Không có người dùng phù hợp.
+        </div>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(users)}">
+            <table class="table table-hover bh-table">
+                <thead><tr>
+                    <th scope="col">Họ tên</th><th scope="col">Email</th><th scope="col">MSSV</th>
+                    <th scope="col">Vai trò</th><th scope="col">Trạng thái</th>
+                    <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                </tr></thead>
+                <tbody>
+                <tr th:each="u : ${users}">
+                    <td class="fw-semibold" th:text="${u.fullName}">Họ tên</td>
+                    <td class="small" th:text="${u.email}">email</td>
+                    <td class="small" th:text="${u.studentCode} ?: '—'">—</td>
+                    <td th:text="#{${'role.' + u.role.name}}">Vai trò</td>
+                    <td>
+                        <span th:if="${u.enabled}" class="badge rounded-pill bh-status bh-status-AVAILABLE">Đang hoạt động</span>
+                        <span th:unless="${u.enabled}" class="badge rounded-pill bh-status bh-status-DAMAGED">Đã khoá</span>
+                        <span th:if="${u.lockedUntil != null and u.lockedUntil.isAfter(now)}"
+                              class="badge rounded-pill bh-status bh-status-WAITING"
+                              th:title="|Sai mật khẩu nhiều lần, mở lại lúc ${#temporals.format(u.lockedUntil, 'HH:mm dd/MM')}|">Tạm khoá đăng nhập</span>
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-dark" th:href="@{/admin/users/{id}/edit(id=${u.id})}">Sửa</a>
+                        <form class="d-inline" th:action="@{/admin/users/{id}/toggle(id=${u.id})}" method="post"
+                              th:attr="data-confirm=${u.enabled} ? 'Khoá tài khoản này? Người dùng sẽ không đăng nhập được.' : 'Mở khoá tài khoản này?'">
+                            <button class="btn btn-sm" type="submit"
+                                    th:classappend="${u.enabled} ? 'btn-outline-danger' : 'btn-outline-success'"
+                                    th:text="${u.enabled} ? 'Khoá' : 'Mở khoá'">Khoá</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/layout :: pagination(${pages},
+            @{/admin/users(page=${pages.number - 1},size=${size},name=${name},email=${email},role=${selectedRole},enabled=${selectedEnabled},studentCode=${studentCode},sort=${sort},direction=${direction})},
+            @{/admin/users(page=${pages.number + 1},size=${size},name=${name},email=${email},role=${selectedRole},enabled=${selectedEnabled},studentCode=${studentCode},sort=${sort},direction=${direction})})}"></nav>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

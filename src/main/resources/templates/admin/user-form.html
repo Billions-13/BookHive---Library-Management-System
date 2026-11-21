@@ -1,12 +1,82 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>User Form</title></head><body>
-<h1>User Form</h1><p th:if="${error}" th:text="${error}"></p>
-<form th:action="${formAction}" th:object="${form}" method="post">
-<p><label>Full name <input th:field="*{fullName}" required></label><span th:errors="*{fullName}"></span></p>
-<p><label>Email <input type="email" th:field="*{email}" required></label><span th:errors="*{email}"></span></p>
-<p><label>Phone <input th:field="*{phone}"></label></p>
-<p><label>Student code <input th:field="*{studentCode}"></label></p>
-<p><label>Role <select th:field="*{role}"><option th:each="r : ${roles}" th:value="${r}" th:text="${r}"></option></select></label><span th:errors="*{role}"></span></p>
-<p><label>Enabled <input type="checkbox" th:field="*{enabled}"></label></p>
-<p><label>Password <input type="password" th:field="*{password}" placeholder="Required for new accounts; blank to keep old"></label></p>
-<button>Save User</button></form><p><a th:href="@{/admin/users}">Back</a></p></body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${#strings.endsWith(formAction, '/new')} ? 'Tạo tài khoản' : 'Sửa tài khoản')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1" th:with="isNew=${#strings.endsWith(formAction, '/new')}">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/admin/users}">Quản trị người dùng</a></li>
+            <li class="breadcrumb-item active" aria-current="page" th:text="${isNew} ? 'Tạo tài khoản' : 'Sửa tài khoản'">Tạo tài khoản</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <div class="bh-page-header">
+                <h1 th:text="${isNew} ? 'Tạo tài khoản' : 'Sửa tài khoản'">Tạo tài khoản</h1>
+            </div>
+            <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}">Lỗi</div>
+
+            <form class="bh-card p-3 p-md-4" th:action="${formAction}" th:object="${form}" method="post" id="userForm">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="fullName">Họ và tên <span class="text-danger">*</span></label>
+                        <input class="form-control" id="fullName" th:field="*{fullName}" th:errorclass="is-invalid" maxlength="120" required>
+                        <div class="invalid-feedback" th:errors="*{fullName}"></div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="email">Email <span class="text-danger">*</span></label>
+                        <input class="form-control" type="email" id="email" th:field="*{email}" th:errorclass="is-invalid"
+                               maxlength="191" required>
+                        <div class="invalid-feedback" th:errors="*{email}"></div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="studentCode">MSSV</label>
+                        <input class="form-control" id="studentCode" th:field="*{studentCode}" th:errorclass="is-invalid" maxlength="30">
+                        <div class="invalid-feedback" th:errors="*{studentCode}"></div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="phone">Số điện thoại</label>
+                        <input class="form-control" id="phone" th:field="*{phone}" th:errorclass="is-invalid" maxlength="20" inputmode="tel">
+                        <div class="invalid-feedback" th:errors="*{phone}"></div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="role">Vai trò <span class="text-danger">*</span></label>
+                        <select class="form-select" id="role" th:field="*{role}" th:errorclass="is-invalid" required>
+                            <option th:each="r : ${roles}" th:value="${r}" th:text="#{${'role.' + r}}">Vai trò</option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{role}"></div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="password"
+                               th:text="${isNew} ? 'Mật khẩu (bắt buộc)' : 'Mật khẩu mới'">Mật khẩu</label>
+                        <input class="form-control" type="password" id="password" th:field="*{password}"
+                               autocomplete="new-password" minlength="8" maxlength="72" th:required="${isNew}"
+                               aria-describedby="passwordHelp">
+                        <div id="passwordHelp" class="form-text"
+                             th:text="${isNew} ? 'Ít nhất 8 ký tự.' : 'Để trống nếu giữ mật khẩu cũ.'">Ít nhất 8 ký tự.</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="enabled1" th:field="*{enabled}">
+                            <label class="form-check-label" for="enabled1">Cho phép đăng nhập (tài khoản đang hoạt động)</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button class="btn btn-warning fw-semibold" type="submit">Lưu tài khoản</button>
+                    <a class="btn btn-outline-secondary" th:href="@{/admin/users}">Huỷ</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
