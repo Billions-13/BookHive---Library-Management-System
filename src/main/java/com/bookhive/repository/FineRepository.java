@@ -22,10 +22,18 @@ public interface FineRepository
     // Get all fines by status
     List<Fine> findByStatus(FineStatus status);
 
-    // Get fines of a user
+    // Get fines of a user (book title is shown, so load loan -> copy -> batch -> book;
+    // production runs with open-in-view=false)
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {
+        "loan", "loan.user", "loan.copy", "loan.copy.batch", "loan.copy.batch.book"})
     List<Fine> findByLoanUserIdOrderByCreatedAtDesc(
             Long userId
     );
+
+    @Override
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {
+        "loan", "loan.user", "loan.copy", "loan.copy.batch", "loan.copy.batch.book"})
+    List<Fine> findAll();
 
     // Get unpaid fines of a user
     List<Fine> findByLoanUserIdAndStatus(
