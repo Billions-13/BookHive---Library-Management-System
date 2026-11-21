@@ -124,6 +124,26 @@ class PageRenderingTest {
     }
 
     @Test
+    void readerPagesShowLoanStateAndFines() throws Exception {
+        mvc.perform(get("/my/loans").with(student()))
+            .andExpect(content().string(containsString("Quá hạn")))
+            .andExpect(content().string(containsString("Lịch sử mượn trả")))
+            .andExpect(content().string(containsString("Trả trễ")));
+
+        mvc.perform(get("/my/fines").with(student()))
+            .andExpect(content().string(containsString("10.000 ₫")))
+            .andExpect(content().string(containsString("Chưa thanh toán")));
+
+        mvc.perform(get("/my/reservations").with(user(TestFixtures.LECTURER).roles("LECTURER")))
+            .andExpect(content().string(containsString("Đang chờ")))
+            .andExpect(content().string(containsString("Huỷ đặt trước")));
+
+        mvc.perform(get("/my/profile").with(student()))
+            .andExpect(content().string(containsString("Nguyễn Văn Sinh")))
+            .andExpect(content().string(containsString("Sinh viên")));
+    }
+
+    @Test
     void statsApiReturnsJson() throws Exception {
         mvc.perform(get("/api/stats").with(librarian()))
             .andExpect(status().isOk())

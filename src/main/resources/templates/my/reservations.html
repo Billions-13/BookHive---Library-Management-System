@@ -1,9 +1,63 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>My Reservations</title></head><body>
-<h1>My Reservations</h1><p><a th:href="@{/books}">Book catalog</a></p>
-<table border="1"><tr><th>Title</th><th>Requested</th><th>Status</th><th>Pickup by</th><th>Action</th></tr>
-<tr th:each="r : ${reservations}"><td th:text="${r.book.title}"></td><td th:text="${r.reservedAt}"></td>
-<td th:text="${r.status}"></td><td th:text="${r.holdUntil}"></td><td>
-<form th:if="${r.status.name() == 'WAITING' or r.status.name() == 'READY' or r.status.name() == 'REQUESTED'}"
-th:action="@{/my/reservations/{id}/cancel(id=${r.id})}" method="post"><button>Cancel</button></form></td></tr></table>
-<p th:if="${#lists.isEmpty(reservations)}">No reservations yet.</p></body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Sách đặt trước')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Sách đặt trước</li>
+        </ol>
+    </nav>
+
+    <div class="bh-page-header">
+        <h1>Sách đặt trước</h1>
+        <a class="btn btn-outline-dark" th:href="@{/books}">Tra cứu sách</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <p class="small text-muted">
+        Khi có sách được trả về, thư viện giữ sách cho người đặt sớm nhất trong 2 ngày.
+        Trạng thái <strong>Sẵn sàng nhận sách</strong> nghĩa là bạn có thể đến quầy hoặc bấm Mượn ở trang chi tiết sách.
+    </p>
+
+    <div class="bh-card">
+        <div th:if="${#lists.isEmpty(reservations)}" class="bh-empty">
+            <span class="bh-empty-icon">⏳</span>Bạn chưa đặt trước cuốn sách nào.
+        </div>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(reservations)}">
+            <table class="table bh-table">
+                <thead><tr>
+                    <th scope="col">Tên sách</th><th scope="col">Ngày đặt</th><th scope="col">Trạng thái</th>
+                    <th scope="col">Giữ sách đến</th><th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                </tr></thead>
+                <tbody>
+                <tr th:each="r : ${reservations}">
+                    <td class="fw-semibold">
+                        <a class="text-dark" th:href="@{/books/{id}(id=${r.book.id})}" th:text="${r.book.title}">Tên sách</a>
+                    </td>
+                    <td th:text="${#temporals.format(r.reservedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
+                    <td><span th:replace="~{fragments/layout :: status('reservation', ${r.status})}"></span></td>
+                    <td th:text="${r.holdUntil != null} ? ${#temporals.format(r.holdUntil, 'dd/MM/yyyy HH:mm')} : '—'">—</td>
+                    <td class="text-end">
+                        <form th:if="${r.status.name() == 'WAITING' or r.status.name() == 'READY' or r.status.name() == 'REQUESTED'}"
+                              th:action="@{/my/reservations/{id}/cancel(id=${r.id})}" method="post"
+                              data-confirm="Huỷ đặt trước cuốn sách này? Bạn sẽ mất vị trí trong hàng đợi.">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Huỷ đặt trước</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,7 +1,66 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Profile</title></head><body>
-<h1>My Profile</h1><p th:if="${param.updated}">Profile updated.</p>
-<form th:action="@{/my/profile}" th:object="${form}" method="post">
-<p><label>Full name <input th:field="*{fullName}" required></label><span th:errors="*{fullName}"></span></p>
-<p><label>Phone <input th:field="*{phone}"></label><span th:errors="*{phone}"></span></p><button>Update</button></form>
-<p><a th:href="@{/my/password}">Change password</a></p></body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Hồ sơ cá nhân')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Hồ sơ cá nhân</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <ul class="nav nav-pills mb-3">
+                <li class="nav-item"><a class="nav-link active" aria-current="page" th:href="@{/my/profile}">Hồ sơ</a></li>
+                <li class="nav-item"><a class="nav-link text-dark" th:href="@{/my/password}">Đổi mật khẩu</a></li>
+            </ul>
+
+            <div class="bh-card p-4">
+                <h1 class="h4 fw-bold mb-3">Hồ sơ cá nhân</h1>
+
+                <div th:if="${param.updated}" class="alert alert-success" role="status" data-autohide>
+                    Đã cập nhật hồ sơ.
+                </div>
+
+                <dl class="row small mb-3">
+                    <dt class="col-4">Email</dt>
+                    <dd class="col-8" sec:authentication="name">email</dd>
+                    <dt class="col-4">Vai trò</dt>
+                    <dd class="col-8">
+                        <span sec:authorize="hasRole('STUDENT')" th:text="#{role.STUDENT}">Sinh viên</span>
+                        <span sec:authorize="hasRole('LECTURER')" th:text="#{role.LECTURER}">Giảng viên</span>
+                        <span sec:authorize="hasRole('LIBRARIAN')" th:text="#{role.LIBRARIAN}">Thủ thư</span>
+                        <span sec:authorize="hasRole('ADMIN')" th:text="#{role.ADMIN}">Quản trị viên</span>
+                    </dd>
+                </dl>
+
+                <form th:action="@{/my/profile}" th:object="${form}" method="post" id="profileForm">
+                    <div class="mb-3">
+                        <label class="form-label" for="fullName">Họ và tên</label>
+                        <input class="form-control" id="fullName" th:field="*{fullName}" th:errorclass="is-invalid"
+                               maxlength="120" autocomplete="name" required>
+                        <div class="invalid-feedback" th:errors="*{fullName}"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="phone">Số điện thoại <span class="text-muted">(không bắt buộc)</span></label>
+                        <input class="form-control" id="phone" th:field="*{phone}" th:errorclass="is-invalid"
+                               maxlength="20" autocomplete="tel" inputmode="tel">
+                        <div class="invalid-feedback" th:errors="*{phone}"></div>
+                    </div>
+                    <button class="btn btn-warning fw-semibold" type="submit">Lưu thay đổi</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

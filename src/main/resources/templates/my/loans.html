@@ -1,6 +1,95 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>My Loans</title></head><body>
-<h1>My Loans</h1><p><a th:href="@{/books}">Borrow books</a> | <a th:href="@{/my/reservations}">My reservations</a></p>
-<table border="1"><tr><th>Copy code</th><th>Book</th><th>Borrowed</th><th>Due</th><th>Returned</th><th>Status</th></tr>
-<tr th:each="l : ${loans}"><td th:text="${l.copy.copyCode}"></td><td th:text="${l.copy.batch.book.title}"></td><td th:text="${l.borrowedAt}"></td><td th:text="${l.dueDate}"></td><td th:text="${l.returnDate}"></td><td th:text="${l.status}"></td></tr></table>
-<p th:if="${#lists.isEmpty(loans)}">No loans yet.</p></body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Sách đang mượn')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1"
+      th:with="today=${#temporals.createToday()},
+               active=${loans.?[status.name() == 'ACTIVE']},
+               history=${loans.?[status.name() != 'ACTIVE']}">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Sách đang mượn</li>
+        </ol>
+    </nav>
+
+    <div class="bh-page-header">
+        <h1>Sách đang mượn</h1>
+        <div class="d-flex gap-2">
+            <a class="btn btn-warning fw-semibold" th:href="@{/books}">Mượn thêm sách</a>
+            <a class="btn btn-outline-dark" th:href="@{/my/reservations}">Sách đặt trước</a>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <p class="small text-muted">Trả sách tại quầy thư viện. Trả trễ bị phạt 2.000 ₫ cho mỗi ngày quá hạn.</p>
+
+    <section class="bh-card mb-4" aria-labelledby="activeHeading">
+        <h2 id="activeHeading" class="h6 fw-bold p-3 mb-0 border-bottom">
+            Đang mượn (<span th:text="${#lists.size(active)}">0</span>)
+        </h2>
+        <div th:if="${#lists.isEmpty(active)}" class="bh-empty">
+            <span class="bh-empty-icon">📚</span>Bạn chưa mượn cuốn sách nào.
+        </div>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(active)}">
+            <table class="table bh-table">
+                <thead><tr>
+                    <th scope="col">Tên sách</th><th scope="col">Mã cuốn</th><th scope="col">Ngày mượn</th>
+                    <th scope="col">Hạn trả</th><th scope="col">Tình trạng</th>
+                </tr></thead>
+                <tbody>
+                <tr th:each="l : ${active}">
+                    <td class="fw-semibold" th:text="${l.copy.batch.book.title}">Tên sách</td>
+                    <td><code th:text="${l.copy.copyCode}">COPY0001</code></td>
+                    <td th:text="${#temporals.format(l.borrowedAt, 'dd/MM/yyyy')}">01/01/2026</td>
+                    <td th:text="${#temporals.format(l.dueDate, 'dd/MM/yyyy')}">15/01/2026</td>
+                    <td>
+                        <span th:if="${l.dueDate.isBefore(today)}" class="badge rounded-pill bh-status bh-status-OVERDUE">Quá hạn</span>
+                        <span th:if="${!l.dueDate.isBefore(today) and !l.dueDate.isAfter(today.plusDays(2))}"
+                              class="badge rounded-pill bh-status bh-status-WAITING">Sắp đến hạn</span>
+                        <th:block th:if="${l.dueDate.isAfter(today.plusDays(2))}">
+                            <span th:replace="~{fragments/layout :: status('loan', ${l.status})}"></span>
+                        </th:block>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="bh-card" aria-labelledby="historyHeading">
+        <h2 id="historyHeading" class="h6 fw-bold p-3 mb-0 border-bottom">Lịch sử mượn trả</h2>
+        <div th:if="${#lists.isEmpty(history)}" class="bh-empty">Chưa có lịch sử mượn trả.</div>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(history)}">
+            <table class="table bh-table">
+                <thead><tr>
+                    <th scope="col">Tên sách</th><th scope="col">Mã cuốn</th><th scope="col">Ngày mượn</th>
+                    <th scope="col">Hạn trả</th><th scope="col">Ngày trả</th><th scope="col">Trạng thái</th>
+                </tr></thead>
+                <tbody>
+                <tr th:each="l : ${history}">
+                    <td th:text="${l.copy.batch.book.title}">Tên sách</td>
+                    <td><code th:text="${l.copy.copyCode}">COPY0001</code></td>
+                    <td th:text="${#temporals.format(l.borrowedAt, 'dd/MM/yyyy')}">01/01/2026</td>
+                    <td th:text="${#temporals.format(l.dueDate, 'dd/MM/yyyy')}">15/01/2026</td>
+                    <td th:text="${l.returnDate != null} ? ${#temporals.format(l.returnDate, 'dd/MM/yyyy')} : '—'">16/01/2026</td>
+                    <td>
+                        <span th:replace="~{fragments/layout :: status('loan', ${l.status})}"></span>
+                        <span th:if="${l.returnDate != null and l.returnDate.isAfter(l.dueDate)}"
+                              class="badge rounded-pill bh-status bh-status-OVERDUE">Trả trễ</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

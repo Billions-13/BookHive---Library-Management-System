@@ -1,4 +1,58 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>My Fines</title></head><body>
-<h1>My Fines</h1><table border="1"><tr><th>Loan ID</th><th>Amount VND</th><th>Status</th></tr>
-<tr th:each="f : ${fines}"><td th:text="${f.loan.id}"></td><td th:text="${f.amount}"></td><td th:text="${f.status}"></td></tr></table></body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Tiền phạt')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1"
+      th:with="unpaid=${fines.?[status.name() == 'UNPAID']}">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Tiền phạt</li>
+        </ol>
+    </nav>
+
+    <div class="bh-page-header">
+        <h1>Tiền phạt</h1>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div th:unless="${#lists.isEmpty(unpaid)}" class="alert alert-warning" role="status">
+        Bạn đang có <strong th:text="${#lists.size(unpaid)}">1</strong> khoản phạt chưa thanh toán, tổng
+        <strong th:text="${#numbers.formatDecimal(#aggregates.sum(unpaid.![amount]), 1, 'POINT', 0, 'COMMA')} + ' ₫'">10.000 ₫</strong>.
+        Vui lòng thanh toán tại quầy thư viện.
+    </div>
+
+    <div class="bh-card">
+        <div th:if="${#lists.isEmpty(fines)}" class="bh-empty">
+            <span class="bh-empty-icon">🎉</span>Bạn không có khoản phạt nào.
+        </div>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(fines)}">
+            <table class="table bh-table">
+                <thead><tr>
+                    <th scope="col">Tên sách</th><th scope="col">Hạn trả</th><th scope="col">Ngày trả</th>
+                    <th scope="col" class="text-end">Số tiền</th><th scope="col">Trạng thái</th><th scope="col">Ghi chú</th>
+                </tr></thead>
+                <tbody>
+                <tr th:each="f : ${fines}">
+                    <td th:text="${f.loan.copy.batch.book.title}">Tên sách</td>
+                    <td th:text="${#temporals.format(f.loan.dueDate, 'dd/MM/yyyy')}">01/01/2026</td>
+                    <td th:text="${f.loan.returnDate != null} ? ${#temporals.format(f.loan.returnDate, 'dd/MM/yyyy')} : '—'">—</td>
+                    <td class="text-end fw-semibold"
+                        th:text="${#numbers.formatDecimal(f.amount, 1, 'POINT', 0, 'COMMA')} + ' ₫'">10.000 ₫</td>
+                    <td><span th:replace="~{fragments/layout :: status('fine', ${f.status})}"></span></td>
+                    <td class="small text-muted" th:text="${f.notes} ?: '—'">—</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
