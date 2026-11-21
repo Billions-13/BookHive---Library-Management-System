@@ -192,6 +192,32 @@ class PageRenderingTest {
     }
 
     @Test
+    void adminPagesShowVietnameseRoles() throws Exception {
+        mvc.perform(get("/admin/users").param("role", "STUDENT").with(admin()))
+            .andExpect(content().string(containsString("Nguyễn Văn Sinh")))
+            .andExpect(content().string(containsString("ITITIU22001")))
+            .andExpect(content().string(containsString("<option value=\"STUDENT\" selected=\"selected\">Sinh viên</option>")))
+            .andExpect(content().string(containsString("Đang hoạt động")));
+
+        mvc.perform(get("/admin/users/new").with(admin()))
+            .andExpect(content().string(containsString("Tạo tài khoản")))
+            .andExpect(content().string(containsString("Quản trị viên")));
+    }
+
+    @Test
+    void errorPagesAreVietnamese() throws Exception {
+        mvc.perform(get("/error").requestAttr(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE, 404)
+                .accept(org.springframework.http.MediaType.TEXT_HTML))
+            .andExpect(content().string(containsString("Không tìm thấy trang")));
+        mvc.perform(get("/error").requestAttr(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE, 403)
+                .accept(org.springframework.http.MediaType.TEXT_HTML))
+            .andExpect(content().string(containsString("Bạn không có quyền truy cập")));
+        mvc.perform(get("/error").requestAttr(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE, 500)
+                .accept(org.springframework.http.MediaType.TEXT_HTML))
+            .andExpect(content().string(containsString("Hệ thống đang gặp sự cố")));
+    }
+
+    @Test
     void statsApiReturnsJson() throws Exception {
         mvc.perform(get("/api/stats").with(librarian()))
             .andExpect(status().isOk())

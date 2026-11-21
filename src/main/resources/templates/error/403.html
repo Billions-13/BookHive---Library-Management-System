@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Bạn không có quyền truy cập trang này')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<!-- Rendered by Spring Boot's error controller for HTTP status 403 -->
+<main id="main" class="container py-5 flex-grow-1">
+    <div class="bh-card p-4 p-md-5 text-center mx-auto" style="max-width: 640px;">
+        <div class="fs-1 mb-2" aria-hidden="true">🔒</div>
+        <p class="text-muted small mb-1" th:text="|Mã lỗi ${status}|">Mã lỗi 403</p>
+        <h1 class="h4 fw-bold">Bạn không có quyền truy cập trang này</h1>
+        <p class="text-muted mb-4">Trang này chỉ dành cho vai trò khác (thủ thư hoặc quản trị viên). Nếu cần quyền, hãy liên hệ quản trị viên thư viện.</p>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            <button type="button" class="btn btn-warning fw-semibold" data-history-back>← Quay lại</button>
+            <a class="btn btn-outline-dark" th:href="@{/}">Về trang chủ</a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
