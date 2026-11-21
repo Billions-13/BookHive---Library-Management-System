@@ -1,37 +1,61 @@
-
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Login - BookHive</title>
-</head>
-<body>
-    <h1>BookHive Login</h1>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Đăng nhập')}"></head>
+<body class="bg-light d-flex align-items-center justify-content-center min-vh-100 py-4 px-3 position-relative">
 
-    <p th:if="${param.error}">
-        Invalid credentials or account unavailable.
-    </p>
+<!-- Sparkle effect (design by Bạn 2), shown once after a successful registration: /login?registered -->
+<div class="sparkle-sky-overlay" id="successSparkleOverlay" th:if="${param.registered}" aria-hidden="true">
+    <div class="sparkle-spinner">
+        ✦ ✧ ✨ ★ ✦ ✧ ✨ ★ ✦ ✧ ✨ ★
+        ✧ ✨ ★ ✦ ✧ ✨ ★ ✦ ✧ ✨ ★ ✧
+        ✨ ★ ✦ ✧ ✨ ★ ✦ ✧ ✨ ★ ✦ ✧
+        ★ ✦ ✧ ✨ ★ ✦ ✧ ✨ ★ ✦ ✧ ✨
+    </div>
+</div>
 
-    <p th:if="${param.logout}">
-        You have logged out.
-    </p>
+<main id="main" class="card bh-auth-card p-4 position-relative">
+    <a th:href="@{/}" class="text-decoration-none">
+        <h1 class="h3 text-center fw-bold text-warning mb-1">📚 BookHive</h1>
+    </a>
+    <h2 class="h5 text-center mb-4">Đăng nhập</h2>
 
-    <p th:if="${param.registered}">
-        Registration successful.
-    </p>
+    <div th:if="${param.registered}" class="alert alert-success border-success text-center p-3 mb-3"
+         role="status" id="registerSuccessBox">
+        <div class="fw-bold fs-5 text-success blink-congrats mb-1">✨ Chúc mừng đăng ký thành công! ✨</div>
+        <small>Hãy đăng nhập bằng email và mật khẩu vừa tạo.</small>
+    </div>
 
-    <form th:action="@{/login}" method="post">
-        <label for="email">Email</label>
-        <input id="email" type="email"
-               name="email" required>
+    <div th:if="${param.error}" class="alert alert-danger text-center p-2 small mb-3" role="alert" id="errorMessage">
+        Email hoặc mật khẩu không chính xác, hoặc tài khoản đang bị khoá.<br>
+        Sai 5 lần liên tiếp, tài khoản sẽ bị khoá trong 15 phút.
+    </div>
 
-        <label for="password">Password</label>
-        <input id="password" type="password"
-               name="password" required>
+    <div th:if="${param.logout}" class="alert alert-info text-center p-2 small mb-3" role="status">
+        Bạn đã đăng xuất.
+    </div>
 
-        <button type="submit">Login</button>
+    <form th:action="@{/login}" method="post" id="loginForm">
+        <div class="mb-3">
+            <label class="form-label" for="email">Email</label>
+            <input type="email" id="email" name="email" class="form-control" placeholder="student@hcmiu.edu.vn"
+                   autocomplete="username" required autofocus>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="password">Mật khẩu</label>
+            <input type="password" id="password" name="password" class="form-control" placeholder="••••••••"
+                   autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-warning w-100 fw-bold mt-2">Đăng nhập</button>
     </form>
 
-    <a th:href="@{/register}">Create account</a>
+    <div class="text-center mt-3">
+        <small>Chưa có tài khoản? <a th:href="@{/register}" class="text-warning fw-bold">Đăng ký ngay</a></small>
+    </div>
+    <div class="text-center mt-2">
+        <small><a th:href="@{/}" class="text-muted">← Về trang chủ</a></small>
+    </div>
+</main>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>
