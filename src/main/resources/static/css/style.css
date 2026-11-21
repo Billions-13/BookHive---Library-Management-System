@@ -242,3 +242,17 @@ body {
     .btn { min-height: 40px; }
     .btn-sm { min-height: 34px; }
 }
+
+/* Hiệu ứng pháo sáng tự mờ dần (app.js thêm class bh-fade-out) */
+.sparkle-sky-overlay {
+    transition: opacity 0.8s ease;
+}
+
+.bh-fade-out {
+    opacity: 0;
+}
+
+/* Nút đang gửi form */
+button[data-loading] {
+    cursor: progress;
+}
