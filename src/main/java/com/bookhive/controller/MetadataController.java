@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/librarian")
@@ -40,21 +41,30 @@ public class MetadataController {
         return authorForm(m, service.authorForm(id), "/librarian/authors/" + id + "/edit");
     }
     @PostMapping("/authors/new")
-    public String saveAuthor(@Valid @ModelAttribute("form") AuthorForm f, BindingResult e, Model m) {
-        return saveAuthor(null, f, e, m);
+    public String saveAuthor(@Valid @ModelAttribute("form") AuthorForm f, BindingResult e, Model m,
+            RedirectAttributes ra) {
+        return saveAuthor(null, f, e, m, ra);
     }
     @PostMapping("/authors/{id}/edit")
     public String updateAuthor(@PathVariable Long id, @Valid @ModelAttribute("form") AuthorForm f,
-             BindingResult e, Model m) { return saveAuthor(id, f, e, m); }
-    private String saveAuthor(Long id, AuthorForm f, BindingResult e, Model m) {
+             BindingResult e, Model m, RedirectAttributes ra) { return saveAuthor(id, f, e, m, ra); }
+    private String saveAuthor(Long id, AuthorForm f, BindingResult e, Model m, RedirectAttributes ra) {
         if (!e.hasErrors()) {
-            try { service.saveAuthor(id, f); return "redirect:/librarian/authors"; }
+            try {
+                service.saveAuthor(id, f);
+                ra.addFlashAttribute("success", "Đã lưu tác giả " + f.getName() + ".");
+                return "redirect:/librarian/authors";
+            }
             catch (IllegalArgumentException ex) { m.addAttribute("error", ex.getMessage()); }
         }
         return authorForm(m, f, id == null ? "/librarian/authors/new" : "/librarian/authors/" + id + "/edit");
     }
     @PostMapping("/authors/{id}/archive")
-    public String archiveAuthor(@PathVariable Long id) { service.archiveAuthor(id); return "redirect:/librarian/authors"; }
+    public String archiveAuthor(@PathVariable Long id, RedirectAttributes ra) {
+        service.archiveAuthor(id);
+        ra.addFlashAttribute("success", "Đã ẩn tác giả.");
+        return "redirect:/librarian/authors";
+    }
 
     @GetMapping("/categories")
     public String categories(@RequestParam(defaultValue = "") String name,
@@ -81,21 +91,30 @@ public class MetadataController {
         return categoryForm(m, service.categoryForm(id), "/librarian/categories/" + id + "/edit");
     }
     @PostMapping("/categories/new")
-    public String saveCategory(@Valid @ModelAttribute("form") CategoryForm f, BindingResult e, Model m) {
-        return saveCategory(null, f, e, m);
+    public String saveCategory(@Valid @ModelAttribute("form") CategoryForm f, BindingResult e, Model m,
+            RedirectAttributes ra) {
+        return saveCategory(null, f, e, m, ra);
     }
     @PostMapping("/categories/{id}/edit")
     public String updateCategory(@PathVariable Long id, @Valid @ModelAttribute("form") CategoryForm f,
-             BindingResult e, Model m) { return saveCategory(id, f, e, m); }
-    private String saveCategory(Long id, CategoryForm f, BindingResult e, Model m) {
+             BindingResult e, Model m, RedirectAttributes ra) { return saveCategory(id, f, e, m, ra); }
+    private String saveCategory(Long id, CategoryForm f, BindingResult e, Model m, RedirectAttributes ra) {
         if (!e.hasErrors()) {
-            try { service.saveCategory(id, f); return "redirect:/librarian/categories"; }
+            try {
+                service.saveCategory(id, f);
+                ra.addFlashAttribute("success", "Đã lưu thể loại " + f.getName() + ".");
+                return "redirect:/librarian/categories";
+            }
             catch (IllegalArgumentException ex) { m.addAttribute("error", ex.getMessage()); }
         }
         return categoryForm(m, f, id == null ? "/librarian/categories/new" : "/librarian/categories/" + id + "/edit");
     }
     @PostMapping("/categories/{id}/archive")
-    public String archiveCategory(@PathVariable Long id) { service.archiveCategory(id); return "redirect:/librarian/categories"; }
+    public String archiveCategory(@PathVariable Long id, RedirectAttributes ra) {
+        service.archiveCategory(id);
+        ra.addFlashAttribute("success", "Đã ẩn thể loại.");
+        return "redirect:/librarian/categories";
+    }
 
     private String authorForm(Model m, AuthorForm f, String action) {
         m.addAttribute("form", f); m.addAttribute("formAction", action);

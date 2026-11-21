@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin/users")
@@ -39,9 +40,14 @@ public class AdminUserController {
     @GetMapping("/new")
     public String create(Model m) { return form(m, new AdminUserForm(), "/admin/users/new"); }
     @PostMapping("/new")
-    public String create(@Valid @ModelAttribute("form") AdminUserForm f, BindingResult errors, Model m) {
+    public String create(@Valid @ModelAttribute("form") AdminUserForm f, BindingResult errors, Model m,
+            RedirectAttributes ra) {
         if (!errors.hasErrors()) {
-            try { accounts.createUser(f); return "redirect:/admin/users"; }
+            try {
+                accounts.createUser(f);
+                ra.addFlashAttribute("success", "Đã tạo tài khoản " + f.getEmail() + ".");
+                return "redirect:/admin/users";
+            }
             catch (IllegalArgumentException e) { m.addAttribute("error", e.getMessage()); }
         }
         return form(m, f, "/admin/users/new");
@@ -52,16 +58,22 @@ public class AdminUserController {
     }
     @PostMapping("/{id}/edit")
     public String edit(@PathVariable Long id, @Valid @ModelAttribute("form") AdminUserForm f,
-            BindingResult errors, Model m) {
+            BindingResult errors, Model m, RedirectAttributes ra) {
         if (!errors.hasErrors()) {
-            try { accounts.editUser(id, f); return "redirect:/admin/users"; }
+            try {
+                accounts.editUser(id, f);
+                ra.addFlashAttribute("success", "Đã lưu tài khoản " + f.getEmail() + ".");
+                return "redirect:/admin/users";
+            }
             catch (IllegalArgumentException e) { m.addAttribute("error", e.getMessage()); }
         }
         return form(m, f, "/admin/users/" + id + "/edit");
     }
     @PostMapping("/{id}/toggle")
-    public String toggle(@PathVariable Long id) {
-        accounts.toggle(id); return "redirect:/admin/users";
+    public String toggle(@PathVariable Long id, RedirectAttributes ra) {
+        accounts.toggle(id);
+        ra.addFlashAttribute("success", "Đã cập nhật trạng thái khoá/mở khoá tài khoản.");
+        return "redirect:/admin/users";
     }
     private String form(Model m, AdminUserForm f, String action) {
         m.addAttribute("form", f);

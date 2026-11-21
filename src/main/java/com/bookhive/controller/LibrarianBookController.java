@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/librarian/books")
@@ -33,9 +34,13 @@ public class LibrarianBookController {
     }
     @PostMapping("/new")
     public String create(@Valid @ModelAttribute("bookForm") BookForm form,
-                         BindingResult errors, Model m) {
+                         BindingResult errors, Model m, RedirectAttributes ra) {
         if (!errors.hasErrors()) {
-            try { return "redirect:/books/" + books.create(form); }
+            try {
+                Long id = books.create(form);
+                ra.addFlashAttribute("success", "Đã thêm đầu sách. Hãy vào Kho sách để nhập lô cho mượn.");
+                return "redirect:/books/" + id;
+            }
             catch (IllegalArgumentException e) { m.addAttribute("error", e.getMessage()); }
         }
         m.addAttribute("formAction", "/librarian/books/new");
@@ -49,17 +54,23 @@ public class LibrarianBookController {
     }
     @PostMapping("/{id}/edit")
     public String edit(@PathVariable Long id,
-            @Valid @ModelAttribute("bookForm") BookForm form, BindingResult errors, Model m) {
+            @Valid @ModelAttribute("bookForm") BookForm form, BindingResult errors, Model m,
+            RedirectAttributes ra) {
         if (!errors.hasErrors()) {
-            try { books.edit(id, form); return "redirect:/books/" + id; }
+            try {
+                books.edit(id, form);
+                ra.addFlashAttribute("success", "Đã lưu thay đổi đầu sách.");
+                return "redirect:/books/" + id;
+            }
             catch (IllegalArgumentException e) { m.addAttribute("error", e.getMessage()); }
         }
         m.addAttribute("formAction", "/librarian/books/" + id + "/edit");
         return "librarian/book-form";
     }
     @PostMapping("/{id}/archive")
-    public String archive(@PathVariable Long id, Model m) {
+    public String archive(@PathVariable Long id, RedirectAttributes ra) {
         books.archive(id);
+        ra.addFlashAttribute("success", "Đã ẩn đầu sách khỏi danh mục.");
         return "redirect:/books";
     }
 }

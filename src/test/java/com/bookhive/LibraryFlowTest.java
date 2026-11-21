@@ -18,7 +18,9 @@ import java.nio.charset.StandardCharsets;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -44,6 +46,64 @@ class LibraryFlowTest {
 
     private static MockMultipartFile csv(String content) {
         return new MockMultipartFile("file", "books.csv", "text/csv", content.getBytes(StandardCharsets.UTF_8));
+    }
+
+    static RequestPostProcessor student() { return user(TestFixtures.STUDENT).roles("STUDENT"); }
+
+    @Test
+    void borrowReturnAndFineFlow() throws Exception {
+        // Reader borrows the last available copy.
+        mvc.perform(post("/my/borrow/" + data.availableBookId).with(csrf()).with(student()))
+            .andExpect(redirectedUrl("/my/loans"))
+            .andExpect(flash().attribute("success", containsString("Mượn sách thành công")));
+        mvc.perform(get("/books/" + data.availableBookId).with(student()))
+            .andExpect(content().string(containsString("Hiện không có sách để mượn")));
+
+        // Librarian receives the overdue loan (6 days late) -> 12.000 ₫ fine.
+        mvc.perform(post("/librarian/loans/" + data.activeLoanId + "/return").with(csrf()).with(librarian()))
+            .andExpect(redirectedUrl("/librarian/loans"))
+            .andExpect(flash().attribute("success", containsString("Đã nhận trả sách")));
+        mvc.perform(get("/my/fines").with(student()))
+            .andExpect(content().string(containsString("12.000 ₫")))
+            .andExpect(content().string(containsString("Trả trễ 6 ngày")));
+
+        // Returning twice is rejected with a Vietnamese business error.
+        mvc.perform(post("/librarian/loans/" + data.activeLoanId + "/return").with(csrf()).with(librarian()))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string(containsString("Phiếu mượn này đã được trả")));
+    }
+
+    @Test
+    void reservationQueueFlow() throws Exception {
+        // Another reader is already waiting for this title, so borrowing must go through the queue.
+        mvc.perform(post("/my/borrow/" + data.outOfStockBookId).with(csrf()).with(student()))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string(containsString("Sách đang có người đặt trước")));
+
+        mvc.perform(post("/my/reservations/" + data.outOfStockBookId).with(csrf()).with(student()))
+            .andExpect(redirectedUrl("/my/reservations"))
+            .andExpect(flash().attribute("success", containsString("Đã đặt trước")));
+        mvc.perform(post("/my/reservations/" + data.outOfStockBookId).with(csrf()).with(student()))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string(containsString("Bạn đã đặt trước đầu sách này rồi")));
+
+        // A reader cannot cancel someone else's reservation.
+        mvc.perform(post("/my/reservations/" + data.reservationId + "/cancel").with(csrf()).with(student()))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string(containsString("không thể huỷ lượt đặt trước của người khác")));
+    }
+
+    @Test
+    void receivingABatchCreatesCopiesAndShowsSuccess() throws Exception {
+        mvc.perform(post("/librarian/books/" + data.outOfStockBookId + "/batches").with(csrf()).with(librarian())
+                .param("quantity", "3").param("supplier", "Nhà sách Phương Nam"))
+            .andExpect(redirectedUrl("/librarian/books/" + data.outOfStockBookId + "/inventory"))
+            .andExpect(flash().attribute("success", "Đã nhập 3 cuốn vào kho, mỗi cuốn có mã riêng."));
+
+        mvc.perform(post("/librarian/books/" + data.outOfStockBookId + "/batches").with(csrf()).with(librarian())
+                .param("quantity", "0"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("Giá trị nhỏ nhất là 1")));
     }
 
     @Test
