@@ -88,6 +88,8 @@ Guests can browse the catalog and register for an account. Newly registered user
 | `/librarian/catalog/csv` | Catalog CSV import and export for librarians and administrators. |
 | `/admin/users` | User account management. |
 | `GET /api/stats` | JSON statistics for librarians and administrators, containing `totalTitles`, `availableCopies`, `borrowedCopies`, and `overdueLoans`. |
+| `/librarian/dashboard`, `GET /api/stats/charts` | Chart.js statistics page and its data: copies per status, loans in the last 6 months, the 5 most borrowed titles. |
+| `GET /api/books/{id}/availability` | Public JSON stock counters for one title, refreshed by the book page every 30 seconds. |
 
 CSV imports must use **UTF-8**, contain at most **1,000 book rows**, and include the following columns:
 
@@ -113,15 +115,32 @@ The inventory model follows the relationship **`books` → `book_batches` → `b
 
 See the [ER diagram](database/erd.png) and [database design documentation](database/database-design.md).
 
+## Trying the Website without MySQL
+
+To look at the interface or demo it quickly, run the whole site on an in-memory H2 database with a small data set (one account per role, an overdue loan, an unpaid fine, a reservation queue):
+
+```powershell
+mvn spring-boot:test-run
+```
+
+Open [http://localhost:8080](http://localhost:8080) and sign in as `student@test.local`, `lecturer@test.local`, `librarian@test.local` or `admin@test.local` with the password `BookHiveTest!2026`. The data disappears when the application stops. See [TestBookhiveApplication.java](src/test/java/com/bookhive/TestBookhiveApplication.java).
+
 ## Testing and Packaging
 
-Start MySQL and ensure that the database schema has been created. Then run Maven to execute tests and build the application:
+The automated tests use H2 in MySQL mode with `open-in-view=false`, as in production, so they run without a MySQL server:
 
 ```powershell
 mvn verify
 ```
 
-The current automated test verifies that the application can load the Spring context with the database configuration. Use the [business test checklist](docs/TEST_CASES.md) to manually verify additional workflows in the browser.
+| Test class | What it checks |
+| --- | --- |
+| [PageRenderingTest](src/test/java/com/bookhive/PageRenderingTest.java) | Every page renders for the role allowed to open it; Vietnamese labels, filters keep their values, stock and fine display, error pages, the statistics and availability APIs, HTTP 403 for other roles |
+| [AuthFlowTest](src/test/java/com/bookhive/AuthFlowTest.java) | Sign-in through Spring Security (CSRF, `email` field), registration with student code, duplicate e-mail/student code, password confirmation, Vietnamese validation messages, menus per role |
+| [LibraryFlowTest](src/test/java/com/bookhive/LibraryFlowTest.java) | Borrowing the last copy, late return and fine, reservation queue, receiving a batch, CSV import success and failures |
+| [EmailReminderServiceTest](src/test/java/com/bookhive/service/EmailReminderServiceTest.java) | Reminder e-mails (due soon / overdue) with a mocked mail sender |
+
+Use the [business test checklist](docs/TEST_CASES.md) for the manual checks against MySQL.
 
 After packaging, run the generated JAR from the project root:
 
@@ -129,17 +148,30 @@ After packaging, run the generated JAR from the project root:
 java -jar target/bookhive-0.0.1-SNAPSHOT.jar
 ```
 
+## Front-end
+
+Pages are Thymeleaf templates styled with Bootstrap 5.3 (CDN, with Subresource Integrity) and [style.css](src/main/resources/static/css/style.css). The interface text is Vietnamese; enum labels and validation messages live in [messages.properties](src/main/resources/messages.properties) and [ValidationMessages.properties](src/main/resources/ValidationMessages.properties). Shared parts (navigation bar with a mobile menu, alerts, pagination, footer) are in [fragments/layout.html](src/main/resources/templates/fragments/layout.html).
+
+JavaScript is plain ES6 without a build step:
+
+- [app.js](src/main/resources/static/js/app.js): confirmation dialogs, browser-side validation with Vietnamese messages, loading state and double-submit protection, auto-submitting filters, instant table filters that ignore accents, cover preview, slug generation, CSV checks before upload, and live stock counters on the book page.
+- [dashboard.js](src/main/resources/static/js/dashboard.js): the Chart.js statistics page at `/librarian/dashboard`.
+
+Templates opt in to these behaviours with `data-*` attributes, listed in [docs/ENDPOINTS.md](docs/ENDPOINTS.md#front-end-hooks).
+
 ## Production Configuration
 
 Set the following environment variables on the server: `SPRING_PROFILES_ACTIVE=prod`, `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD`. Use a separate database schema and database account for production. Set `PORT` if your hosting platform assigns a specific port.
 
 Email reminders are disabled by default. To enable them under the `prod` profile, set `MAIL_ENABLED=true` along with `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, and `SMTP_PASSWORD`. A scheduled task runs daily at **08:00 (Vietnam time)** to notify borrowers about active loans due within two days or already overdue. See [application-prod.yml](src/main/resources/application-prod.yml).
 
+Step-by-step instructions for Railway (Dockerfile, MySQL service, variables, HTTPS domain, backups) are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
 ## Team Responsibilities
 
 - **Member 1:** Backend development and database design/implementation.
 - **Member 2:** CSS styling and UI/UX design.
-- **Member 3:** JavaScript development and deployment.
+- **Member 3:** Integration of the backend and the interface, JavaScript, Chart.js dashboard, automated tests, and deployment.
 
 ## License
 

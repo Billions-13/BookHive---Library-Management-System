@@ -44,6 +44,9 @@ Staff access includes `LIBRARIAN` and `ADMIN`.
 | `/admin/users/new`, `/admin/users/{id}/edit` | GET/POST | Admin | Create or edit accounts, change roles, and reset passwords |
 | `/admin/users/{id}/toggle` | POST | Admin | Enable or disable an account |
 | `/api/stats` | GET | Staff | Return JSON statistics for use by Chart.js |
+| `/api/stats/charts` | GET | Staff | Chart data: `copyStatus`, `loansPerMonth` (6 months), `topBooks` (5 titles) |
+| `/librarian/dashboard` | GET | Staff | Statistics page drawn by `/js/dashboard.js` |
+| `/api/books/{id}/availability` | GET | Public | `totalCopies`, `availableCopies`, `borrowedCopies`, `damagedCopies` for one title |
 
 `GET /api/stats` returns the fields shown below. Live counts come from MySQL.
 
@@ -63,3 +66,26 @@ New copy codes are derived from auto-increment IDs assigned by MySQL. For exampl
 - Member 2 adds CSS and responsive layouts while preserving the Java and SQL structure and the CSRF tokens.
 - Member 3 adds JavaScript using Fetch and DOM APIs, a Chart.js dashboard, CSV and email integration, and deployment. Reuse the existing borrowing and return logic.
 - Page endpoints return HTML. The statistics endpoint returns JSON, and the CSV export returns a file. Agree on request and response contracts with the team before adding further AJAX interactions.
+
+## Front-end hooks
+
+Added during integration (Member 3). Templates turn on JavaScript behaviour with the `data-*` attributes below, handled by [app.js](../src/main/resources/static/js/app.js). When restyling a page, keep these attributes, the element IDs they point to, and the `th:action`/`th:field` attributes.
+
+| Attribute | Element | Behaviour |
+| --- | --- | --- |
+| `data-confirm="message"` | `form` | Bootstrap confirmation dialog before submitting |
+| `data-confirm-when-value="A,B"` | `form` with `data-confirm` | Confirm only when the form's `status` field has one of these values |
+| `data-autosubmit` | `select` | Submit the filter form when the value changes |
+| `data-table-filter="#tableId"` | `input` | Filter table rows by text; Vietnamese accents are ignored |
+| `data-row-filter="#tableId"` | `select` | Filter table rows by their `data-status` attribute |
+| `data-filter-empty="#tableId"` | any | Shown when the filters hide every row |
+| `data-match="otherFieldId"` | `input` | Must equal another field (password confirmation) |
+| `data-pattern-message="text"` | `input[pattern]` | Message shown when the pattern does not match |
+| `data-cover-preview="#imgId"` | `input` | Live preview of a cover image URL |
+| `data-slug-from="#nameId"` | `input` | Fill a URL slug from a Vietnamese name |
+| `data-max-bytes`, `data-file-info`, `data-csv-preview` | CSV `input[type=file]` and siblings | Check extension, size, required columns and row count; preview the first rows |
+| `data-availability-url` + `data-count` | stock counters on `/books/{id}` | Refresh counters every 30 s; warn when stock crosses zero |
+| `data-autohide` | `.alert` | Close after 6 seconds |
+| `data-history-back` | `button` | Go back to the previous page |
+
+Forms with constraints (`required`, `min`, `pattern`, ...) are validated in the browser with Vietnamese messages, and the server validates them again. POST forms show a spinner and cannot be submitted twice. Success messages after an action are flash attributes named `success`; the `alerts` fragment in [layout.html](../src/main/resources/templates/fragments/layout.html) displays them.
