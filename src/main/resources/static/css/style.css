@@ -123,3 +123,122 @@ body {
     display: inline-block;
     animation: floatArrow 0.9s infinite ease-in-out;
 }
+/* ------------------------------------------------------------------
+   Khung trang dùng chung (bổ sung khi tích hợp với template Thymeleaf)
+   ------------------------------------------------------------------ */
+
+.bh-skip-link {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 2000;
+    padding: 0.5rem 1rem;
+    background: var(--bh-dark);
+    color: #fff;
+    border-radius: 8px;
+}
+
+.bh-user-name {
+    max-width: 200px;
+}
+
+.bh-footer {
+    background-color: #ffffff;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.bh-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.bh-page-header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.bh-card {
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    background-color: #ffffff;
+}
+
+.bh-table {
+    margin-bottom: 0;
+}
+
+.bh-table thead th {
+    background-color: #fff8db;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.bh-table td,
+.bh-table th {
+    vertical-align: middle;
+}
+
+.bh-empty {
+    text-align: center;
+    color: #6c757d;
+    padding: 2.5rem 1rem;
+}
+
+.bh-empty-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.btn-warning {
+    --bs-btn-bg: var(--bh-primary);
+    --bs-btn-border-color: var(--bh-primary);
+    --bs-btn-hover-bg: var(--bh-primary-hover);
+    --bs-btn-hover-border-color: var(--bh-primary-hover);
+}
+
+/* Trạng thái (badge) */
+.bh-status { font-weight: 600; }
+.bh-status-AVAILABLE, .bh-status-RETURNED, .bh-status-PAID, .bh-status-FULFILLED { background-color: #d1e7dd; color: #0f5132; }
+.bh-status-BORROWED, .bh-status-ACTIVE { background-color: #cfe2ff; color: #084298; }
+.bh-status-RESERVED, .bh-status-READY, .bh-status-REQUESTED, .bh-status-WAITING { background-color: #fff3cd; color: #664d03; }
+.bh-status-DAMAGED, .bh-status-UNPAID, .bh-status-OVERDUE { background-color: #f8d7da; color: #842029; }
+.bh-status-LOST, .bh-status-DISCARDED, .bh-status-CANCELLED, .bh-status-EXPIRED, .bh-status-WAIVED { background-color: #e2e3e5; color: #41464b; }
+
+/* Ảnh bìa sách */
+.bh-cover-img {
+    width: 100%;
+    max-width: 220px;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.bh-stat {
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    background: #ffffff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    height: 100%;
+}
+
+.bh-stat-value {
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+/* Màn hình nhỏ: bảng cuộn ngang, nút bấm to hơn cho dễ chạm */
+@media (max-width: 575.98px) {
+    .bh-page-header h1 { font-size: 1.3rem; }
+    .bh-hero { padding: 2rem 1.25rem; }
+    .btn { min-height: 40px; }
+    .btn-sm { min-height: 34px; }
+}

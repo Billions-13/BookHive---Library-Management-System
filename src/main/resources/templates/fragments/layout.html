@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!--
+  Shared page parts. Usage in a page:
+    <head th:replace="~{fragments/layout :: head('Tiêu đề')}"></head>
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+-->
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- CSRF token for JavaScript fetch() calls (read by /js/app.js) -->
+    <meta name="_csrf" th:if="${_csrf != null}" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:if="${_csrf != null}" th:content="${_csrf.headerName}">
+    <title th:text="|${title} - BookHive|">BookHive</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+          crossorigin="anonymous">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<a th:fragment="skip-link" class="visually-hidden-focusable bh-skip-link" href="#main">Bỏ qua menu, tới nội dung chính</a>
+
+<nav th:fragment="navbar" class="navbar navbar-expand-lg bh-navbar sticky-top" aria-label="Menu chính">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-warning" th:href="@{/}">📚 BookHive</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                aria-controls="mainNav" aria-expanded="false" aria-label="Mở menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" th:href="@{/books}">Tra cứu sách</a></li>
+
+                <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                       aria-expanded="false">Của tôi</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/my/loans}">Sách đang mượn</a></li>
+                        <li><a class="dropdown-item" th:href="@{/my/reservations}">Sách đặt trước</a></li>
+                        <li><a class="dropdown-item" th:href="@{/my/fines}">Tiền phạt</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" th:href="@{/my/profile}">Hồ sơ cá nhân</a></li>
+                        <li><a class="dropdown-item" th:href="@{/my/password}">Đổi mật khẩu</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item dropdown" sec:authorize="hasAnyRole('LIBRARIAN','ADMIN')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                       aria-expanded="false">Thủ thư</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/librarian/dashboard}">Thống kê</a></li>
+                        <li><a class="dropdown-item" th:href="@{/librarian/books/new}">Thêm đầu sách</a></li>
+                        <li><a class="dropdown-item" th:href="@{/librarian/loans}">Phiếu mượn / trả</a></li>
+                        <li><a class="dropdown-item" th:href="@{/librarian/fines}">Quản lý tiền phạt</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" th:href="@{/librarian/authors}">Tác giả</a></li>
+                        <li><a class="dropdown-item" th:href="@{/librarian/categories}">Thể loại</a></li>
+                        <li><a class="dropdown-item" th:href="@{/librarian/catalog/csv}">Nhập / xuất CSV</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/users}">Quản trị người dùng</a>
+                </li>
+            </ul>
+
+            <form class="d-flex me-lg-3 mb-2 mb-lg-0" role="search" th:action="@{/books}" method="get">
+                <input class="form-control form-control-sm me-2" type="search" name="title"
+                       placeholder="Tìm tên sách..." aria-label="Tìm tên sách">
+                <button class="btn btn-sm btn-outline-dark" type="submit">Tìm</button>
+            </form>
+
+            <div class="d-flex gap-2" sec:authorize="isAnonymous()">
+                <a class="btn btn-sm btn-outline-warning text-dark" th:href="@{/register}">Đăng ký</a>
+                <a class="btn btn-sm btn-warning fw-semibold" th:href="@{/login}">Đăng nhập</a>
+            </div>
+
+            <div class="d-flex align-items-center gap-2" sec:authorize="isAuthenticated()">
+                <span class="small text-muted text-truncate bh-user-name" sec:authentication="name">email</span>
+                <form th:action="@{/logout}" method="post" class="m-0">
+                    <button class="btn btn-sm btn-outline-secondary" type="submit">Đăng xuất</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Success message (flash attribute "success") and error message (model attribute "error") -->
+<div th:fragment="alerts" class="bh-alerts">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="status" data-autohide>
+        <span th:text="${success}">Thành công</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}">Lỗi</div>
+</div>
+
+<!-- Coloured badge for an enum status. kind: copy | loan | fine | reservation -->
+<span th:fragment="status(kind, value)" class="badge rounded-pill bh-status"
+      th:classappend="${'bh-status-' + value}"
+      th:text="#{${'status.' + kind + '.' + value}}">Trạng thái</span>
+
+<!-- Previous / next pagination. prevUrl and nextUrl keep the current filters. -->
+<nav th:fragment="pagination(pages, prevUrl, nextUrl)" th:if="${pages.totalElements > 0}"
+     class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 mt-3"
+     aria-label="Phân trang">
+    <small class="text-muted">
+        Hiển thị <strong th:text="${pages.number * pages.size + 1}">1</strong>–<strong
+            th:text="${pages.number * pages.size + pages.numberOfElements}">10</strong>
+        trên tổng <strong th:text="${pages.totalElements}">100</strong>
+    </small>
+    <ul class="pagination pagination-sm mb-0">
+        <li class="page-item" th:classappend="${pages.hasPrevious()} ? '' : 'disabled'">
+            <a class="page-link" th:href="${pages.hasPrevious()} ? ${prevUrl} : '#'"
+               th:attr="aria-disabled=${pages.hasPrevious()} ? null : 'true'">« Trước</a>
+        </li>
+        <li class="page-item active" aria-current="page">
+            <span class="page-link" th:text="|Trang ${pages.number + 1} / ${pages.totalPages}|">Trang 1 / 1</span>
+        </li>
+        <li class="page-item" th:classappend="${pages.hasNext()} ? '' : 'disabled'">
+            <a class="page-link" th:href="${pages.hasNext()} ? ${nextUrl} : '#'"
+               th:attr="aria-disabled=${pages.hasNext()} ? null : 'true'">Sau »</a>
+        </li>
+    </ul>
+</nav>
+
+<!-- Page size selector shared by every list page (10/20/50/100) -->
+<div th:fragment="page-size(size)" class="col-6 col-md-2">
+    <label class="form-label small mb-1" for="size">Số dòng / trang</label>
+    <select class="form-select form-select-sm" id="size" name="size" data-autosubmit>
+        <option value="10" th:selected="${size == 10}">10</option>
+        <option value="20" th:selected="${size == 20}">20</option>
+        <option value="50" th:selected="${size == 50}">50</option>
+        <option value="100" th:selected="${size == 100}">100</option>
+    </select>
+</div>
+
+<!-- Sort direction selector -->
+<div th:fragment="direction(direction)" class="col-6 col-md-2">
+    <label class="form-label small mb-1" for="direction">Thứ tự</label>
+    <select class="form-select form-select-sm" id="direction" name="direction" data-autosubmit>
+        <option value="asc" th:selected="${direction != 'desc'}">Tăng dần</option>
+        <option value="desc" th:selected="${direction == 'desc'}">Giảm dần</option>
+    </select>
+</div>
+
+<footer th:fragment="footer" class="bh-footer mt-auto py-3">
+    <div class="container small text-muted d-flex flex-column flex-sm-row justify-content-between gap-1">
+        <span>© 2026 BookHive · Hệ thống quản lý thư viện trường đại học</span>
+        <span>Web Application Development – Final Project</span>
+    </div>
+</footer>
+
+<th:block th:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</th:block>
+
+</body>
+</html>
