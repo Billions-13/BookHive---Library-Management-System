@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Thống kê thư viện')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1" data-dashboard
+      th:attr="data-stats-url=@{/api/stats},data-charts-url=@{/api/stats/charts},data-book-url=@{/books/}">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Thống kê</li>
+        </ol>
+    </nav>
+
+    <div class="bh-page-header">
+        <h1>Thống kê thư viện</h1>
+        <div class="d-flex align-items-center gap-2">
+            <span class="small text-muted" data-updated-at aria-live="polite">Đang tải số liệu...</span>
+            <button type="button" class="btn btn-sm btn-outline-dark" data-refresh>Làm mới</button>
+        </div>
+    </div>
+
+    <div class="alert alert-danger d-none d-flex flex-wrap align-items-center justify-content-between gap-2"
+         role="alert" data-dashboard-error>
+        <span data-error-message>Không tải được số liệu.</span>
+        <button type="button" class="btn btn-sm btn-outline-danger" data-refresh>Thử lại</button>
+    </div>
+
+    <!-- Headline numbers (filled from GET /api/stats) -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="bh-stat placeholder-glow">
+                <div class="small text-muted">Đầu sách đang phục vụ</div>
+                <div class="bh-stat-value" data-stat="totalTitles"><span class="placeholder col-6"></span></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="bh-stat placeholder-glow">
+                <div class="small text-muted">Cuốn có thể mượn</div>
+                <div class="bh-stat-value" data-stat="availableCopies"><span class="placeholder col-6"></span></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="bh-stat placeholder-glow">
+                <div class="small text-muted">Cuốn đang được mượn</div>
+                <div class="bh-stat-value" data-stat="borrowedCopies"><span class="placeholder col-6"></span></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <a class="bh-stat placeholder-glow d-block text-decoration-none text-reset" th:href="@{/librarian/loans}">
+                <div class="small text-muted">Phiếu mượn quá hạn</div>
+                <div class="bh-stat-value" data-stat="overdueLoans"><span class="placeholder col-6"></span></div>
+                <div class="small text-muted d-none" data-overdue-hint>⚠️ Cần nhắc bạn đọc trả sách →</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Charts (filled from GET /api/stats/charts) -->
+    <div class="row g-4">
+        <div class="col-12 col-lg-6">
+            <section class="bh-card p-3 h-100" aria-labelledby="loansChartTitle">
+                <h2 id="loansChartTitle" class="h6 fw-bold mb-1">Lượt mượn 6 tháng gần nhất</h2>
+                <p class="small text-muted mb-2">Số phiếu mượn được lập trong mỗi tháng.</p>
+                <div class="bh-chart" data-chart-box="loansPerMonth">
+                    <canvas id="loansPerMonthChart" role="img" aria-label="Biểu đồ lượt mượn theo tháng"></canvas>
+                    <div class="bh-chart-overlay" data-chart-state><div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Đang tải</span></div></div>
+                </div>
+                <details class="mt-2">
+                    <summary class="small">Xem dạng bảng</summary>
+                    <table class="table table-sm small mt-2 mb-0" data-chart-table="loansPerMonth"></table>
+                </details>
+            </section>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <section class="bh-card p-3 h-100" aria-labelledby="statusChartTitle">
+                <h2 id="statusChartTitle" class="h6 fw-bold mb-1">Tình trạng các cuốn sách</h2>
+                <p class="small text-muted mb-2">Số cuốn theo trạng thái, nhiều nhất ở trên cùng.</p>
+                <div class="bh-chart" data-chart-box="copyStatus">
+                    <canvas id="copyStatusChart" role="img" aria-label="Biểu đồ số cuốn sách theo trạng thái"></canvas>
+                    <div class="bh-chart-overlay" data-chart-state><div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Đang tải</span></div></div>
+                </div>
+                <details class="mt-2">
+                    <summary class="small">Xem dạng bảng</summary>
+                    <table class="table table-sm small mt-2 mb-0" data-chart-table="copyStatus"></table>
+                </details>
+            </section>
+        </div>
+
+        <div class="col-12">
+            <section class="bh-card p-3" aria-labelledby="topBooksTitle">
+                <h2 id="topBooksTitle" class="h6 fw-bold mb-1">Sách được mượn nhiều nhất</h2>
+                <p class="small text-muted mb-2">5 đầu sách có nhiều lượt mượn nhất từ trước đến nay.</p>
+                <div class="bh-chart" data-chart-box="topBooks">
+                    <canvas id="topBooksChart" role="img" aria-label="Biểu đồ sách được mượn nhiều nhất"></canvas>
+                    <div class="bh-chart-overlay" data-chart-state><div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Đang tải</span></div></div>
+                </div>
+                <details class="mt-2">
+                    <summary class="small">Xem dạng bảng</summary>
+                    <table class="table table-sm small mt-2 mb-0" data-chart-table="topBooks"></table>
+                </details>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"
+        integrity="sha384-Sse/HDqcypGpyTDpvZOJNnG0TT3feGQUkF9H+mnRvic+LjR+K1NhTt8f51KIQ3v3"
+        crossorigin="anonymous"></script>
+<script th:src="@{/js/dashboard.js}"></script>
+</body>
+</html>

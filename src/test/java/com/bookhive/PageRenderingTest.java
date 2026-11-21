@@ -228,6 +228,28 @@ class PageRenderingTest {
     }
 
     @Test
+    void dashboardPageAndChartData() throws Exception {
+        mvc.perform(get("/librarian/dashboard").with(librarian()))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("Thống kê thư viện")))
+            .andExpect(content().string(containsString("data-charts-url=\"/api/stats/charts\"")))
+            .andExpect(content().string(containsString("chart.umd.min.js")));
+
+        mvc.perform(get("/api/stats/charts").with(librarian()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.copyStatus.length()").value(6))
+            .andExpect(jsonPath("$.copyStatus[?(@.status == 'AVAILABLE')].count").value(org.hamcrest.Matchers.contains(1)))
+            .andExpect(jsonPath("$.copyStatus[?(@.status == 'DAMAGED')].count").value(org.hamcrest.Matchers.contains(1)))
+            .andExpect(jsonPath("$.loansPerMonth.length()").value(6))
+            .andExpect(jsonPath("$.loansPerMonth[5].month").value(java.time.YearMonth.now().toString()))
+            .andExpect(jsonPath("$.topBooks[0].title").value("Lập trình Java căn bản"))
+            .andExpect(jsonPath("$.topBooks[0].loans").value(2))
+            .andExpect(jsonPath("$.topBooks[1].loans").value(1));
+
+        mvc.perform(get("/api/stats/charts").with(student())).andExpect(status().isForbidden());
+    }
+
+    @Test
     void accessRulesAreEnforced() throws Exception {
         mvc.perform(get("/my/loans")).andExpect(status().is3xxRedirection());
         mvc.perform(get("/librarian/loans").with(student())).andExpect(status().isForbidden());
