@@ -1,0 +1,399 @@
+{
+  "info": {
+    "name": "BookHive – kiểm thử tích hợp (Bạn 3)",
+    "description": "Chạy theo thứ tự (Run collection). Đặt biến baseUrl = http://localhost:8080 khi chạy máy, hoặc URL Railway khi kiểm tra bản online. Cần dữ liệu từ database/seed-data.sql. Lưu ý: sai mật khẩu 5 lần liên tiếp sẽ khoá tài khoản 15 phút.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "librarianEmail",
+      "value": "librarian@bookhive.example.test"
+    },
+    {
+      "key": "password",
+      "value": "BookHiveDemo!2026"
+    },
+    {
+      "key": "csrf",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Trang công khai",
+      "item": [
+        {
+          "name": "Trang chủ",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Trả về HTML', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('text/html'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tìm sách (lọc, sắp xếp, 20 dòng/trang)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/books?title=java&sort=title&direction=asc&size=20"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "API thống kê khi chưa đăng nhập -> về trang đăng nhập",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stats"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 302', () => pm.response.to.have.status(302));",
+                  "pm.test('Chuyển hướng tới /login', () => pm.expect(pm.response.headers.get('Location') || '').to.include('/login'));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Đăng nhập",
+      "item": [
+        {
+          "name": "Mở trang đăng nhập (lấy CSRF token)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const m = pm.response.text().match(/name=\"_csrf\" value=\"([^\"]+)\"/);",
+                  "pm.test('Trang có CSRF token', () => pm.expect(m, 'không thấy input _csrf').to.not.be.null);",
+                  "if (m) pm.collectionVariables.set('csrf', m[1]);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Đăng nhập sai mật khẩu",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/login",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "email",
+                  "value": "{{librarianEmail}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "sai-mat-khau",
+                  "type": "text"
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 302', () => pm.response.to.have.status(302));",
+                  "pm.test('Chuyển hướng tới /login?error', () => pm.expect(pm.response.headers.get('Location') || '').to.include('/login?error'));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Đăng nhập thủ thư",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/login",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "email",
+                  "value": "{{librarianEmail}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 302', () => pm.response.to.have.status(302));",
+                  "const loc = pm.response.headers.get('Location') || '';",
+                  "pm.test('Không bị báo lỗi đăng nhập', () => pm.expect(loc).to.not.include('error'));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Thủ thư",
+      "item": [
+        {
+          "name": "API thống kê /api/stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stats"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json();",
+                  "pm.test('Có đủ 4 số liệu không âm', () => {",
+                  "  ['totalTitles', 'availableCopies', 'borrowedCopies', 'overdueLoans'].forEach((k) => {",
+                  "    pm.expect(s[k], k).to.be.a('number');",
+                  "    pm.expect(s[k], k).to.be.at.least(0);",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Trang thống kê Chart.js",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/librarian/dashboard.html"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Có canvas biểu đồ và dashboard.js', () => {",
+                  "  pm.expect(pm.response.text()).to.include('circulationChart');",
+                  "  pm.expect(pm.response.text()).to.include('/js/dashboard.js');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quản lý phiếu mượn",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/librarian/loans"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "File JavaScript dùng chung",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/js/app.js"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Là JavaScript', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('javascript'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Đăng xuất",
+      "item": [
+        {
+          "name": "Trang chủ (lấy CSRF token mới sau đăng nhập)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const m = pm.response.text().match(/name=\"_csrf\" value=\"([^\"]+)\"/);",
+                  "pm.test('Trang có CSRF token', () => pm.expect(m, 'không thấy input _csrf').to.not.be.null);",
+                  "if (m) pm.collectionVariables.set('csrf', m[1]);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Đăng xuất",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/logout",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 302', () => pm.response.to.have.status(302));",
+                  "pm.test('Chuyển hướng tới /login?logout', () => pm.expect(pm.response.headers.get('Location') || '').to.include('/login?logout'));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Sau khi đăng xuất không còn vào được API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stats"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 302', () => pm.response.to.have.status(302));",
+                  "pm.test('Chuyển hướng tới /login', () => pm.expect(pm.response.headers.get('Location') || '').to.include('/login'));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        }
+      ]
+    }
+  ]
+}
