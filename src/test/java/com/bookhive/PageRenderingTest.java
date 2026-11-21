@@ -172,6 +172,26 @@ class PageRenderingTest {
     }
 
     @Test
+    void metadataAndCsvPagesRenderInVietnamese() throws Exception {
+        mvc.perform(get("/librarian/authors").param("active", "true").param("size", "50").with(librarian()))
+            .andExpect(content().string(containsString("Nguyễn Nhật Ánh")))
+            .andExpect(content().string(containsString("<option value=\"true\" selected=\"selected\">")))
+            .andExpect(content().string(containsString("<option value=\"50\" selected=\"selected\">")));
+
+        mvc.perform(get("/librarian/categories").with(librarian()))
+            .andExpect(content().string(containsString("cong-nghe-thong-tin")))
+            .andExpect(content().string(containsString("Đang sử dụng")));
+
+        mvc.perform(get("/librarian/categories/new").with(librarian()))
+            .andExpect(content().string(containsString("Thêm thể loại")))
+            .andExpect(content().string(containsString("data-slug-from=\"#name\"")));
+
+        mvc.perform(get("/librarian/catalog/csv").with(librarian()))
+            .andExpect(content().string(containsString("Nhập sách từ file CSV")))
+            .andExpect(content().string(containsString("Tải file CSV")));
+    }
+
+    @Test
     void statsApiReturnsJson() throws Exception {
         mvc.perform(get("/api/stats").with(librarian()))
             .andExpect(status().isOk())

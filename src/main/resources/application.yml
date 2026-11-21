@@ -3,6 +3,11 @@ spring:
     name: bookhive
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+  # CatalogCsvService accepts CSV files up to 2,000,000 bytes; Spring's default upload limit is only 1MB.
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 3MB
 
 server:
   port: ${PORT:8080}
