@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Manage Users</title></head><body>
+<h1>Users</h1>
+<form th:action="@{/admin/users}" method="get">
+<label>Name <input name="name" th:value="${name}"></label>
+<label>Email <input name="email" th:value="${email}"></label>
+<label>Student code <input name="studentCode" th:value="${studentCode}"></label>
+<label>Role <select name="role"><option value="">Any</option><option th:each="r : ${roles}" th:value="${r}" th:text="${r}"></option></select></label>
+<label>Enabled <select name="enabled"><option value="">Any</option><option value="true">Yes</option><option value="false">No</option></select></label>
+<label>Sort <select name="sort"><option value="id">ID</option><option value="fullName">Full name</option><option value="email">Email</option><option value="studentCode">Student code</option></select></label>
+<label>Direction <select name="direction"><option>asc</option><option>desc</option></select></label>
+<label>Size <select name="size"><option>10</option><option>20</option><option>50</option><option>100</option></select></label><button>Filter</button></form>
+<p><a th:if="${pages.hasPrevious()}" th:href="@{/admin/users(page=${pages.number - 1},size=${size},name=${name},email=${email},role=${selectedRole},enabled=${selectedEnabled},studentCode=${studentCode},sort=${sort},direction=${direction})}">Previous</a>
+Page <span th:text="${pages.totalPages == 0 ? 0 : pages.number + 1}"></span>/<span th:text="${pages.totalPages}"></span>
+<a th:if="${pages.hasNext()}" th:href="@{/admin/users(page=${pages.number + 1},size=${size},name=${name},email=${email},role=${selectedRole},enabled=${selectedEnabled},studentCode=${studentCode},sort=${sort},direction=${direction})}">Next</a></p><p><a th:href="@{/admin/users/new}">Create user</a></p>
+<table border="1"><tr><th>Full name</th><th>Email</th><th>Role</th><th>Enabled</th><th>Actions</th></tr>
+<tr th:each="u : ${users}"><td th:text="${u.fullName}"></td><td th:text="${u.email}"></td><td th:text="${u.role.name}"></td>
+<td th:text="${u.enabled}"></td><td><a th:href="@{/admin/users/{id}/edit(id=${u.id})}">Edit</a>
+<form th:action="@{/admin/users/{id}/toggle(id=${u.id})}" method="post"><button th:text="${u.enabled ? 'Lock' : 'Unlock'}"></button></form></td></tr></table></body></html>

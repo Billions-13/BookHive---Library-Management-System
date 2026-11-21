@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "app.mail.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to send loan reminder emails.",
+      "defaultValue": false
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Register - BookHive</title>
+</head>
+<body>
+    <h1>Create Account</h1>
+
+    <p th:if="${error}" th:text="${error}"></p>
+
+    <form th:action="@{/register}"
+          th:object="${form}" method="post">
+
+        <label for="fullName">Full Name</label>
+        <input id="fullName" th:field="*{fullName}"
+               required>
+        <span th:errors="*{fullName}"></span>
+
+        <label for="email">Email</label>
+        <input id="email" type="email"
+               th:field="*{email}" required>
+        <span th:errors="*{email}"></span>
+
+        <label for="password">Password</label>
+        <input id="password" type="password"
+               th:field="*{password}" required>
+        <span th:errors="*{password}"></span>
+
+        <button type="submit">Register</button>
+    </form>
+
+    <a th:href="@{/login}">Login</a>
+</body>
+</html>

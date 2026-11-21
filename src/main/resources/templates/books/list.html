@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Catalog - BookHive</title></head>
+<body>
+<h1>Book Catalog</h1><nav><a th:href="@{/}">Home</a> | <a th:href="@{/login}">Login</a> | <a th:href="@{/librarian/books/new}">Add book (staff)</a></nav>
+<form th:action="@{/books}" method="get">
+<label>Title <input name="title" th:value="${title}"></label>
+<label>ISBN <input name="isbn" th:value="${isbn}"></label>
+<label>Author <input name="author" th:value="${author}"></label>
+<label>Category <input name="category" th:value="${category}"></label>
+<label>Publisher <input name="publisher" th:value="${publisher}"></label>
+<label>Language <input name="language" th:value="${language}"></label>
+<label>Year <input type="number" name="year" th:value="${year}"></label>
+<label>Sort <select name="sort"><option value="title">Title</option><option value="isbn">ISBN</option><option value="publicationYear">Year</option><option value="publisher">Publisher</option><option value="id">ID</option></select></label>
+<label>Direction <select name="direction"><option value="asc">Ascending</option><option value="desc">Descending</option></select></label>
+<label>Page size <select name="size"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option></select></label>
+<button type="submit">Search / Filter</button>
+</form>
+<p th:if="${books.empty}">No books found.</p>
+<table border="1"><thead><tr><th>ISBN</th><th>Title</th><th>Author</th><th>Publisher</th><th>Available</th><th>Details</th></tr></thead><tbody>
+<tr th:each="book : ${books.content}"><td th:text="${book.isbn}"></td><td th:text="${book.title}"></td>
+<td th:text="${book.authorNames}"></td><td th:text="${book.publisher}"></td>
+<td th:text="${book.availableCopies == 0 ? 'OUT OF STOCK' : book.availableCopies}"></td>
+<td><a th:href="@{/books/{id}(id=${book.id})}">View</a></td></tr>
+</tbody></table>
+<p>Page <span th:text="${books.totalPages == 0 ? 0 : books.number + 1}"></span> of <span th:text="${books.totalPages}"></span></p>
+<p><a th:if="${books.hasPrevious()}" th:href="@{/books(page=${books.number - 1},size=${size},title=${title},isbn=${isbn},author=${author},category=${category},publisher=${publisher},language=${language},year=${year},sort=${sort},direction=${direction})}">Previous</a>
+<a th:if="${books.hasNext()}" th:href="@{/books(page=${books.number + 1},size=${size},title=${title},isbn=${isbn},author=${author},category=${category},publisher=${publisher},language=${language},year=${year},sort=${sort},direction=${direction})}">Next</a></p>
+</body></html>

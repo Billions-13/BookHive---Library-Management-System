@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Categories</title></head><body>
+<h1>Categories</h1>
+<form th:action="@{/librarian/categories}" method="get">
+<label>Name <input name="name" th:value="${name}"></label><label>Slug <input name="slug" th:value="${slug}"></label>
+<label>Audience <input name="audience" th:value="${audience}"></label>
+<label>Display order <input type="number" name="displayOrder" th:value="${displayOrder}"></label>
+<label>Active <select name="active"><option value="">Any</option><option value="true">Yes</option><option value="false">No</option></select></label>
+<label>Sort <select name="sort"><option>name</option><option>slug</option><option>displayOrder</option><option>id</option></select></label>
+<label>Direction <select name="direction"><option>asc</option><option>desc</option></select></label>
+<label>Size <select name="size"><option>10</option><option>20</option><option>50</option><option>100</option></select></label><button>Filter</button></form>
+<p><a th:if="${pages.hasPrevious()}" th:href="@{/librarian/categories(page=${pages.number - 1},size=${size},name=${name},slug=${slug},audience=${audience},displayOrder=${displayOrder},active=${active},sort=${sort},direction=${direction})}">Previous</a>
+Page <span th:text="${pages.totalPages == 0 ? 0 : pages.number + 1}"></span>/<span th:text="${pages.totalPages}"></span>
+<a th:if="${pages.hasNext()}" th:href="@{/librarian/categories(page=${pages.number + 1},size=${size},name=${name},slug=${slug},audience=${audience},displayOrder=${displayOrder},active=${active},sort=${sort},direction=${direction})}">Next</a></p><a th:href="@{/librarian/categories/new}">Add category</a>
+<table border="1"><tr><th>Name</th><th>Slug</th><th>Audience</th><th>Action</th></tr>
+<tr th:each="c : ${categories}"><td th:text="${c.name}"></td><td th:text="${c.slug}"></td><td th:text="${c.targetAudience}"></td><td>
+<a th:href="@{/librarian/categories/{id}/edit(id=${c.id})}">Edit</a>
+<form th:action="@{/librarian/categories/{id}/archive(id=${c.id})}" method="post"><button>Archive</button></form></td></tr></table></body></html>

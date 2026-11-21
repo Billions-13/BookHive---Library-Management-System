@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Authors</title></head><body>
+<h1>Authors</h1>
+<form th:action="@{/librarian/authors}" method="get">
+<label>Name <input name="name" th:value="${name}"></label><label>Country <input name="country" th:value="${country}"></label>
+<label>Birth year <input type="number" name="birthYear" th:value="${birthYear}"></label>
+<label>Death year <input type="number" name="deathYear" th:value="${deathYear}"></label>
+<label>Active <select name="active"><option value="">Any</option><option value="true">Yes</option><option value="false">No</option></select></label>
+<label>Sort <select name="sort"><option>name</option><option>country</option><option>birthYear</option><option>id</option></select></label>
+<label>Direction <select name="direction"><option>asc</option><option>desc</option></select></label>
+<label>Size <select name="size"><option>10</option><option>20</option><option>50</option><option>100</option></select></label><button>Filter</button>
+</form>
+<p><a th:if="${pages.hasPrevious()}" th:href="@{/librarian/authors(page=${pages.number - 1},size=${size},name=${name},country=${country},birthYear=${birthYear},deathYear=${deathYear},active=${active},sort=${sort},direction=${direction})}">Previous</a>
+Page <span th:text="${pages.totalPages == 0 ? 0 : pages.number + 1}"></span>/<span th:text="${pages.totalPages}"></span>
+<a th:if="${pages.hasNext()}" th:href="@{/librarian/authors(page=${pages.number + 1},size=${size},name=${name},country=${country},birthYear=${birthYear},deathYear=${deathYear},active=${active},sort=${sort},direction=${direction})}">Next</a></p><a th:href="@{/librarian/authors/new}">Add author</a>
+<table border="1"><tr><th>Name</th><th>Country</th><th>Birth</th><th>Action</th></tr>
+<tr th:each="a : ${authors}"><td th:text="${a.name}"></td><td th:text="${a.country}"></td><td th:text="${a.birthYear}"></td><td>
+<a th:href="@{/librarian/authors/{id}/edit(id=${a.id})}">Edit</a>
+<form th:action="@{/librarian/authors/{id}/archive(id=${a.id})}" method="post"><button>Archive</button></form></td></tr></table></body></html>

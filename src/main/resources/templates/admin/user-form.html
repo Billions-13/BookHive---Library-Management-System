@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>User Form</title></head><body>
+<h1>User Form</h1><p th:if="${error}" th:text="${error}"></p>
+<form th:action="${formAction}" th:object="${form}" method="post">
+<p><label>Full name <input th:field="*{fullName}" required></label><span th:errors="*{fullName}"></span></p>
+<p><label>Email <input type="email" th:field="*{email}" required></label><span th:errors="*{email}"></span></p>
+<p><label>Phone <input th:field="*{phone}"></label></p>
+<p><label>Student code <input th:field="*{studentCode}"></label></p>
+<p><label>Role <select th:field="*{role}"><option th:each="r : ${roles}" th:value="${r}" th:text="${r}"></option></select></label><span th:errors="*{role}"></span></p>
+<p><label>Enabled <input type="checkbox" th:field="*{enabled}"></label></p>
+<p><label>Password <input type="password" th:field="*{password}" placeholder="Required for new accounts; blank to keep old"></label></p>
+<button>Save User</button></form><p><a th:href="@{/admin/users}">Back</a></p></body></html>
