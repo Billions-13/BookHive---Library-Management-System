@@ -1,18 +1,100 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Book Details</title></head><body>
-<a th:href="@{/books}">Back to catalog</a><h1 th:text="${book.title}">Title</h1>
-<p>ISBN: <span th:text="${book.isbn}"></span></p>
-<p>Authors: <span th:text="${#strings.listJoin(book.authorNames, ', ')}"></span></p>
-<p>Categories: <span th:text="${#strings.listJoin(book.categoryNames, ', ')}"></span></p>
-<p>Edition: <span th:text="${book.edition}"></span>; Publisher: <span th:text="${book.publisher}"></span></p>
-<p>Year: <span th:text="${book.publicationYear}"></span>; Language: <span th:text="${book.language}"></span></p>
-<p th:text="${book.description}"></p>
-<p>Total copies: <span th:text="${book.totalCopies}"></span>; Available: <span th:text="${book.availableCopies}"></span>;
-Borrowed: <span th:text="${book.borrowedCopies}"></span>; Damaged: <span th:text="${book.damagedCopies}"></span></p>
-<p th:if="${book.availableCopies == 0}">Currently no copies are available to borrow.</p>
-<form th:if="${book.availableCopies > 0}" th:action="@{/my/borrow/{id}(id=${book.id})}" method="post"><button>Borrow (signed in)</button></form>
-<form th:if="${book.availableCopies == 0}" th:action="@{/my/reservations/{id}(id=${book.id})}" method="post"><button>Join reservation queue</button></form>
-<p><a th:href="@{/librarian/books/{id}/inventory(id=${book.id})}">Inventory (staff)</a> |
-<a th:href="@{/librarian/books/{id}/edit(id=${book.id})}">Edit (staff)</a></p>
-<form th:action="@{/librarian/books/{id}/archive(id=${book.id})}" method="post"><button>Archive book (staff only)</button></form>
-</body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${book.title})}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/books}">Tra cứu sách</a></li>
+            <li class="breadcrumb-item active text-truncate" aria-current="page" th:text="${book.title}">Tên sách</li>
+        </ol>
+    </nav>
+
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="bh-card p-3 p-md-4">
+        <div class="row g-4">
+            <div class="col-12 col-md-4 col-lg-3 text-center">
+                <img th:if="${!#strings.isEmpty(book.coverUrl)}" th:src="${book.coverUrl}" class="bh-cover-img"
+                     th:alt="|Bìa sách ${book.title}|" loading="lazy" referrerpolicy="no-referrer">
+                <div th:if="${#strings.isEmpty(book.coverUrl)}" class="bh-book-cover bh-cover-img mx-auto"
+                     aria-hidden="true">📖</div>
+            </div>
+
+            <div class="col-12 col-md-8 col-lg-9">
+                <h1 class="h3 fw-bold mb-1" th:text="${book.title}">Tên sách</h1>
+                <p class="text-muted mb-2"
+                   th:text="${#lists.isEmpty(book.authorNames)} ? 'Chưa rõ tác giả' : ${#strings.listJoin(book.authorNames, ', ')}">Tác giả</p>
+                <div class="mb-3">
+                    <span th:each="c : ${book.categoryNames}" class="badge bg-warning-subtle text-dark me-1"
+                          th:text="${c}">Thể loại</span>
+                </div>
+
+                <dl class="row small mb-3">
+                    <dt class="col-5 col-sm-3">ISBN</dt><dd class="col-7 col-sm-9" th:text="${book.isbn}">ISBN</dd>
+                    <dt class="col-5 col-sm-3">Phiên bản</dt><dd class="col-7 col-sm-9" th:text="${book.edition} ?: '—'">—</dd>
+                    <dt class="col-5 col-sm-3">Nhà xuất bản</dt><dd class="col-7 col-sm-9" th:text="${book.publisher} ?: '—'">—</dd>
+                    <dt class="col-5 col-sm-3">Năm xuất bản</dt><dd class="col-7 col-sm-9" th:text="${book.publicationYear} ?: '—'">—</dd>
+                    <dt class="col-5 col-sm-3">Ngôn ngữ</dt><dd class="col-7 col-sm-9" th:text="${book.language} ?: '—'">—</dd>
+                </dl>
+
+                <p th:if="${!#strings.isEmpty(book.description)}" th:text="${book.description}" class="mb-3">Mô tả</p>
+
+                <!-- Stock counters -->
+                <div class="row g-2 mb-3 text-center" id="stockCounters">
+                    <div class="col-6 col-sm-3"><div class="border rounded-3 p-2">
+                        <div class="fs-4 fw-bold" th:text="${book.totalCopies}">0</div><div class="small text-muted">Tổng số cuốn</div></div></div>
+                    <div class="col-6 col-sm-3"><div class="border rounded-3 p-2">
+                        <div class="fs-4 fw-bold text-success" th:text="${book.availableCopies}" id="availableCount">0</div><div class="small text-muted">Có thể mượn</div></div></div>
+                    <div class="col-6 col-sm-3"><div class="border rounded-3 p-2">
+                        <div class="fs-4 fw-bold text-primary" th:text="${book.borrowedCopies}">0</div><div class="small text-muted">Đang được mượn</div></div></div>
+                    <div class="col-6 col-sm-3"><div class="border rounded-3 p-2">
+                        <div class="fs-4 fw-bold text-danger" th:text="${book.damagedCopies}">0</div><div class="small text-muted">Hư hỏng</div></div></div>
+                </div>
+
+                <!-- Borrow / reserve -->
+                <div th:if="${book.availableCopies == 0}" class="alert alert-danger py-2" role="status">
+                    <strong>Hết sách</strong> – Hiện không có sách để mượn. Bạn có thể đặt trước để vào hàng đợi.
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <th:block sec:authorize="hasAnyRole('STUDENT','LECTURER')">
+                        <form th:if="${book.availableCopies > 0}" th:action="@{/my/borrow/{id}(id=${book.id})}" method="post"
+                              data-confirm="Xác nhận mượn cuốn sách này?">
+                            <button class="btn btn-warning fw-semibold" type="submit">Mượn sách này</button>
+                        </form>
+                        <form th:if="${book.availableCopies == 0}" th:action="@{/my/reservations/{id}(id=${book.id})}"
+                              method="post" data-confirm="Đặt trước cuốn sách này? Bạn sẽ được giữ sách 2 ngày khi có sách trả về.">
+                            <button class="btn btn-outline-dark fw-semibold" type="submit">Đặt trước</button>
+                        </form>
+                    </th:block>
+
+                    <a sec:authorize="isAnonymous()" class="btn btn-warning fw-semibold" th:href="@{/login}">
+                        Đăng nhập để mượn hoặc đặt trước</a>
+
+                    <th:block sec:authorize="hasAnyRole('LIBRARIAN','ADMIN')">
+                        <a class="btn btn-outline-dark" th:href="@{/librarian/books/{id}/inventory(id=${book.id})}">Kho sách &amp; nhập lô</a>
+                        <a class="btn btn-outline-dark" th:href="@{/librarian/books/{id}/edit(id=${book.id})}">Sửa thông tin</a>
+                        <form th:action="@{/librarian/books/{id}/archive(id=${book.id})}" method="post"
+                              data-confirm="Ẩn đầu sách này khỏi danh mục? Chỉ thực hiện được khi không còn phiếu mượn/đặt trước chưa xử lý.">
+                            <button class="btn btn-outline-danger" type="submit">Ẩn đầu sách (xoá mềm)</button>
+                        </form>
+                    </th:block>
+                </div>
+                <p sec:authorize="hasAnyRole('LIBRARIAN','ADMIN')" class="small text-muted mt-2 mb-0">
+                    Thủ thư lập phiếu mượn cho bạn đọc tại trang <a th:href="@{/librarian/loans}">Phiếu mượn / trả</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

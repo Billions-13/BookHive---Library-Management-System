@@ -1,28 +1,142 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Catalog - BookHive</title></head>
-<body>
-<h1>Book Catalog</h1><nav><a th:href="@{/}">Home</a> | <a th:href="@{/login}">Login</a> | <a th:href="@{/librarian/books/new}">Add book (staff)</a></nav>
-<form th:action="@{/books}" method="get">
-<label>Title <input name="title" th:value="${title}"></label>
-<label>ISBN <input name="isbn" th:value="${isbn}"></label>
-<label>Author <input name="author" th:value="${author}"></label>
-<label>Category <input name="category" th:value="${category}"></label>
-<label>Publisher <input name="publisher" th:value="${publisher}"></label>
-<label>Language <input name="language" th:value="${language}"></label>
-<label>Year <input type="number" name="year" th:value="${year}"></label>
-<label>Sort <select name="sort"><option value="title">Title</option><option value="isbn">ISBN</option><option value="publicationYear">Year</option><option value="publisher">Publisher</option><option value="id">ID</option></select></label>
-<label>Direction <select name="direction"><option value="asc">Ascending</option><option value="desc">Descending</option></select></label>
-<label>Page size <select name="size"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option></select></label>
-<button type="submit">Search / Filter</button>
-</form>
-<p th:if="${books.empty}">No books found.</p>
-<table border="1"><thead><tr><th>ISBN</th><th>Title</th><th>Author</th><th>Publisher</th><th>Available</th><th>Details</th></tr></thead><tbody>
-<tr th:each="book : ${books.content}"><td th:text="${book.isbn}"></td><td th:text="${book.title}"></td>
-<td th:text="${book.authorNames}"></td><td th:text="${book.publisher}"></td>
-<td th:text="${book.availableCopies == 0 ? 'OUT OF STOCK' : book.availableCopies}"></td>
-<td><a th:href="@{/books/{id}(id=${book.id})}">View</a></td></tr>
-</tbody></table>
-<p>Page <span th:text="${books.totalPages == 0 ? 0 : books.number + 1}"></span> of <span th:text="${books.totalPages}"></span></p>
-<p><a th:if="${books.hasPrevious()}" th:href="@{/books(page=${books.number - 1},size=${size},title=${title},isbn=${isbn},author=${author},category=${category},publisher=${publisher},language=${language},year=${year},sort=${sort},direction=${direction})}">Previous</a>
-<a th:if="${books.hasNext()}" th:href="@{/books(page=${books.number + 1},size=${size},title=${title},isbn=${isbn},author=${author},category=${category},publisher=${publisher},language=${language},year=${year},sort=${sort},direction=${direction})}">Next</a></p>
-</body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Tra cứu sách')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Tra cứu sách</li>
+        </ol>
+    </nav>
+
+    <div class="bh-page-header">
+        <h1>Tra cứu sách</h1>
+        <a sec:authorize="hasAnyRole('LIBRARIAN','ADMIN')" class="btn btn-warning fw-semibold"
+           th:href="@{/librarian/books/new}">+ Thêm đầu sách</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <!-- Filters: title + sorting are always visible, the other 6 criteria fold away on small screens -->
+    <form class="bh-card p-3 mb-3" th:action="@{/books}" method="get" id="bookFilterForm">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label small mb-1" for="title">Tên sách</label>
+                <input class="form-control form-control-sm" id="title" name="title" th:value="${title}"
+                       placeholder="VD: Lập trình Java">
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="form-label small mb-1" for="sort">Sắp xếp theo</label>
+                <select class="form-select form-select-sm" id="sort" name="sort" data-autosubmit>
+                    <option value="title" th:selected="${sort == 'title'}">Tên sách</option>
+                    <option value="isbn" th:selected="${sort == 'isbn'}">ISBN</option>
+                    <option value="publicationYear" th:selected="${sort == 'publicationYear'}">Năm xuất bản</option>
+                    <option value="publisher" th:selected="${sort == 'publisher'}">Nhà xuất bản</option>
+                    <option value="id" th:selected="${sort == 'id'}">Mới thêm</option>
+                </select>
+            </div>
+            <div th:replace="~{fragments/layout :: direction(${direction})}"></div>
+            <div th:replace="~{fragments/layout :: page-size(${size})}"></div>
+            <div class="col-12 col-md-2 d-grid">
+                <button class="btn btn-sm btn-dark" type="submit">Tìm kiếm</button>
+            </div>
+        </div>
+
+        <button class="btn btn-link btn-sm px-0 mt-2" type="button" data-bs-toggle="collapse"
+                data-bs-target="#advancedFilters" aria-controls="advancedFilters"
+                th:attr="aria-expanded=${advanced} ? 'true' : 'false'"
+                th:with="advanced=${!#strings.isEmpty(isbn) or !#strings.isEmpty(author) or !#strings.isEmpty(category)
+                         or !#strings.isEmpty(publisher) or !#strings.isEmpty(language) or year != null}">
+            Lọc nâng cao (ISBN, tác giả, thể loại, NXB, ngôn ngữ, năm)
+        </button>
+        <div class="collapse" id="advancedFilters"
+             th:classappend="${!#strings.isEmpty(isbn) or !#strings.isEmpty(author) or !#strings.isEmpty(category)
+                              or !#strings.isEmpty(publisher) or !#strings.isEmpty(language) or year != null} ? 'show'">
+            <div class="row g-2 mt-1">
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1" for="isbn">ISBN</label>
+                    <input class="form-control form-control-sm" id="isbn" name="isbn" th:value="${isbn}">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1" for="author">Tác giả</label>
+                    <input class="form-control form-control-sm" id="author" name="author" th:value="${author}">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1" for="category">Thể loại</label>
+                    <input class="form-control form-control-sm" id="category" name="category" th:value="${category}">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1" for="publisher">Nhà xuất bản</label>
+                    <input class="form-control form-control-sm" id="publisher" name="publisher" th:value="${publisher}">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1" for="language">Ngôn ngữ</label>
+                    <input class="form-control form-control-sm" id="language" name="language" th:value="${language}">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1" for="year">Năm xuất bản</label>
+                    <input class="form-control form-control-sm" type="number" id="year" name="year" min="1400"
+                           max="2100" th:value="${year}">
+                </div>
+            </div>
+            <a class="btn btn-sm btn-outline-secondary mt-2" th:href="@{/books}">Xoá bộ lọc</a>
+        </div>
+    </form>
+
+    <div class="bh-card">
+        <div th:if="${books.empty}" class="bh-empty">
+            <span class="bh-empty-icon">🔍</span>
+            Không tìm thấy sách phù hợp. Hãy thử từ khoá khác hoặc xoá bớt bộ lọc.
+        </div>
+
+        <div class="table-responsive" th:unless="${books.empty}">
+            <table class="table table-hover bh-table">
+                <thead>
+                <tr>
+                    <th scope="col">Tên sách</th>
+                    <th scope="col">Tác giả</th>
+                    <th scope="col" class="d-none d-md-table-cell">ISBN</th>
+                    <th scope="col" class="d-none d-lg-table-cell">Nhà xuất bản</th>
+                    <th scope="col" class="d-none d-lg-table-cell">Năm</th>
+                    <th scope="col">Tình trạng</th>
+                    <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="book : ${books.content}">
+                    <td class="fw-semibold">
+                        <a class="text-dark text-decoration-none" th:href="@{/books/{id}(id=${book.id})}"
+                           th:text="${book.title}">Tên sách</a>
+                    </td>
+                    <td class="small" th:text="${#strings.isEmpty(book.authorNames)} ? '—' : ${book.authorNames}">Tác giả</td>
+                    <td class="small d-none d-md-table-cell" th:text="${book.isbn}">ISBN</td>
+                    <td class="small d-none d-lg-table-cell" th:text="${book.publisher}">NXB</td>
+                    <td class="small d-none d-lg-table-cell" th:text="${book.publicationYear > 0} ? ${book.publicationYear} : '—'">2024</td>
+                    <td>
+                        <span th:if="${book.availableCopies > 0}" class="badge bg-success"
+                              th:text="|Còn ${book.availableCopies} cuốn|">Còn 5 cuốn</span>
+                        <span th:if="${book.availableCopies == 0}" class="badge bg-danger">Hết sách</span>
+                    </td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-dark" th:href="@{/books/{id}(id=${book.id})}">Chi tiết</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/layout :: pagination(${books},
+            @{/books(page=${books.number - 1},size=${size},title=${title},isbn=${isbn},author=${author},category=${category},publisher=${publisher},language=${language},year=${year},sort=${sort},direction=${direction})},
+            @{/books(page=${books.number + 1},size=${size},title=${title},isbn=${isbn},author=${author},category=${category},publisher=${publisher},language=${language},year=${year},sort=${sort},direction=${direction})})}"></nav>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

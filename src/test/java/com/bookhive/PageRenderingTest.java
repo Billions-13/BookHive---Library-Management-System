@@ -13,6 +13,8 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -82,10 +84,43 @@ class PageRenderingTest {
     void lazyAssociationsRenderWithoutOpenSessionInView() throws Exception {
         // copy.batch is LAZY; these pages walk loan -> copy -> batch -> book after the service transaction ends.
         mvc.perform(get("/my/loans").with(student()))
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("Lập trình Java căn bản")));
+            .andExpect(content().string(containsString("Lập trình Java căn bản")));
         mvc.perform(get("/librarian/books/" + data.availableBookId + "/inventory").with(librarian()))
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("BATCH-T1")))
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("COPYT0002")));
+            .andExpect(content().string(containsString("BATCH-T1")))
+            .andExpect(content().string(containsString("COPYT0002")));
+    }
+
+    @Test
+    void catalogShowsStockAndKeepsSelectedFilters() throws Exception {
+        mvc.perform(get("/books").param("size", "20").param("sort", "publisher").param("direction", "desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("Còn 1 cuốn")))
+            .andExpect(content().string(containsString("Hết sách")))
+            .andExpect(content().string(containsString("<option value=\"20\" selected=\"selected\">")))
+            .andExpect(content().string(containsString("<option value=\"publisher\" selected=\"selected\">")))
+            .andExpect(content().string(containsString("<option value=\"desc\" selected=\"selected\">")));
+
+        mvc.perform(get("/books").param("author", "không-có-tác-giả-này"))
+            .andExpect(content().string(containsString("Không tìm thấy sách phù hợp")));
+    }
+
+    @Test
+    void bookDetailOffersBorrowOrReservation() throws Exception {
+        mvc.perform(get("/books/" + data.availableBookId).with(student()))
+            .andExpect(content().string(containsString("Mượn sách này")))
+            .andExpect(content().string(not(containsString("Ẩn đầu sách"))));
+
+        mvc.perform(get("/books/" + data.outOfStockBookId).with(student()))
+            .andExpect(content().string(containsString("Hiện không có sách để mượn")))
+            .andExpect(content().string(containsString("Đặt trước")))
+            .andExpect(content().string(not(containsString("Mượn sách này"))));
+
+        mvc.perform(get("/books/" + data.availableBookId).with(librarian()))
+            .andExpect(content().string(containsString("Ẩn đầu sách")))
+            .andExpect(content().string(containsString("Kho sách")));
+
+        mvc.perform(get("/books/" + data.availableBookId))
+            .andExpect(content().string(containsString("Đăng nhập để mượn")));
     }
 
     @Test
