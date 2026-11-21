@@ -1,0 +1,18 @@
+# Profile used by integration tests: H2 in MySQL mode instead of a real MySQL server.
+spring:
+  datasource:
+    url: jdbc:h2:mem:bookhive;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    # Same as application-prod.yml so lazy-loading problems show up in tests, not on Railway.
+    open-in-view: false
+    show-sql: false
+  thymeleaf:
+    cache: false
+
+app:
+  mail:
+    enabled: false
