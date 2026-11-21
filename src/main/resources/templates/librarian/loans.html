@@ -1,9 +1,112 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Loan Management</title></head><body>
-<h1>Loan Management</h1><form th:action="@{/librarian/loans}" method="post">
-<label>Book ID <input type="number" name="bookId" required></label>
-<label>Reader <select name="userId"><option th:each="u : ${users}" th:value="${u.id}" th:text="${u.fullName + ' (' + u.email + ')'}"></option></select></label>
-<button>Issue loan</button></form>
-<table border="1"><tr><th>ID</th><th>Reader</th><th>Book copy</th><th>Due date</th><th>Status</th><th>Return</th></tr>
-<tr th:each="l : ${loans}"><td th:text="${l.id}"></td><td th:text="${l.user.fullName}"></td><td th:text="${l.copy.copyCode}"></td><td th:text="${l.dueDate}"></td><td th:text="${l.status}"></td>
-<td><form th:if="${l.status.name() == 'ACTIVE'}" th:action="@{/librarian/loans/{id}/return(id=${l.id})}" method="post"><button>Receive return</button></form></td></tr></table></body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Phiếu mượn / trả')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1" th:with="today=${#temporals.createToday()}">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Phiếu mượn / trả</li>
+        </ol>
+    </nav>
+
+    <div class="bh-page-header">
+        <h1>Phiếu mượn / trả</h1>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <!-- Issue a loan -->
+    <section class="bh-card p-3 mb-4" aria-labelledby="issueHeading">
+        <h2 id="issueHeading" class="h6 fw-bold">Lập phiếu mượn</h2>
+        <p class="small text-muted mb-2">
+            Hệ thống tự chọn một cuốn còn trong kho, kiểm tra hạn mức mượn theo vai trò và hàng đợi đặt trước.
+            Mã đầu sách hiển thị ở trang chi tiết sách.
+        </p>
+        <form class="row g-2 align-items-end" th:action="@{/librarian/loans}" method="post" id="issueLoanForm">
+            <div class="col-12 col-md-3">
+                <label class="form-label small mb-1" for="bookId">Mã đầu sách (ID) <span class="text-danger">*</span></label>
+                <input class="form-control" type="number" min="1" id="bookId" name="bookId" required
+                       th:value="${param.bookId}">
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small mb-1" for="userId">Bạn đọc <span class="text-danger">*</span></label>
+                <select class="form-select" id="userId" name="userId" required>
+                    <option value="" disabled selected>-- Chọn sinh viên / giảng viên --</option>
+                    <option th:each="u : ${users.?[enabled and (role.name.name() == 'STUDENT' or role.name.name() == 'LECTURER')]}"
+                            th:value="${u.id}"
+                            th:text="${u.fullName + ' – ' + u.email + (u.studentCode != null ? ' – ' + u.studentCode : '')}">Bạn đọc</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3 d-grid">
+                <button class="btn btn-warning fw-semibold" type="submit">Lập phiếu mượn</button>
+            </div>
+        </form>
+    </section>
+
+    <!-- Loan list -->
+    <section class="bh-card" aria-labelledby="loanListHeading">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 p-3 border-bottom">
+            <h2 id="loanListHeading" class="h6 fw-bold mb-0">Danh sách phiếu mượn (<span th:text="${#lists.size(loans)}">0</span>)</h2>
+            <div class="d-flex flex-wrap gap-2">
+                <label class="visually-hidden" for="loanStatusFilter">Lọc theo trạng thái</label>
+                <select class="form-select form-select-sm w-auto" id="loanStatusFilter" data-row-filter="#loanTable">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="ACTIVE">Đang mượn</option>
+                    <option value="OVERDUE">Quá hạn</option>
+                    <option value="RETURNED">Đã trả</option>
+                </select>
+                <label class="visually-hidden" for="loanFilter">Tìm bạn đọc, sách, mã cuốn</label>
+                <input class="form-control form-control-sm w-auto" type="search" id="loanFilter"
+                       placeholder="Tìm bạn đọc, sách, mã cuốn..." data-table-filter="#loanTable">
+            </div>
+        </div>
+        <div th:if="${#lists.isEmpty(loans)}" class="bh-empty">Chưa có phiếu mượn nào.</div>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(loans)}">
+            <table class="table table-hover bh-table" id="loanTable">
+                <thead><tr>
+                    <th scope="col">#</th><th scope="col">Bạn đọc</th><th scope="col">Sách</th><th scope="col">Mã cuốn</th>
+                    <th scope="col">Ngày mượn</th><th scope="col">Hạn trả</th><th scope="col">Trạng thái</th>
+                    <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                </tr></thead>
+                <tbody>
+                <tr th:each="l : ${loans}"
+                    th:with="overdue=${l.status.name() == 'ACTIVE' and l.dueDate.isBefore(today)}"
+                    th:attr="data-status=${overdue} ? 'OVERDUE' : ${l.status.name()}">
+                    <td th:text="${l.id}">1</td>
+                    <td>
+                        <div class="fw-semibold" th:text="${l.user.fullName}">Bạn đọc</div>
+                        <div class="small text-muted" th:text="${l.user.email}">email</div>
+                    </td>
+                    <td th:text="${l.copy.batch.book.title}">Tên sách</td>
+                    <td><code th:text="${l.copy.copyCode}">COPY0001</code></td>
+                    <td th:text="${#temporals.format(l.borrowedAt, 'dd/MM/yyyy')}">01/01/2026</td>
+                    <td th:text="${#temporals.format(l.dueDate, 'dd/MM/yyyy')}">15/01/2026</td>
+                    <td>
+                        <span th:if="${overdue}" class="badge rounded-pill bh-status bh-status-OVERDUE">Quá hạn</span>
+                        <th:block th:unless="${overdue}">
+                            <span th:replace="~{fragments/layout :: status('loan', ${l.status})}"></span>
+                        </th:block>
+                    </td>
+                    <td class="text-end">
+                        <form th:if="${l.status.name() == 'ACTIVE'}" th:action="@{/librarian/loans/{id}/return(id=${l.id})}"
+                              method="post"
+                              data-confirm="Xác nhận nhận trả sách? Nếu trả trễ, hệ thống tự tính tiền phạt 2.000 ₫/ngày.">
+                            <button class="btn btn-sm btn-outline-success" type="submit">Nhận trả</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="bh-empty d-none" data-filter-empty="#loanTable">Không có phiếu mượn khớp bộ lọc.</p>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

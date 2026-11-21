@@ -36,6 +36,8 @@
                 </div>
 
                 <dl class="row small mb-3">
+                    <dt class="col-5 col-sm-3" sec:authorize="hasAnyRole('LIBRARIAN','ADMIN')">Mã đầu sách (ID)</dt>
+                    <dd class="col-7 col-sm-9" sec:authorize="hasAnyRole('LIBRARIAN','ADMIN')" th:text="${book.id}">1</dd>
                     <dt class="col-5 col-sm-3">ISBN</dt><dd class="col-7 col-sm-9" th:text="${book.isbn}">ISBN</dd>
                     <dt class="col-5 col-sm-3">Phiên bản</dt><dd class="col-7 col-sm-9" th:text="${book.edition} ?: '—'">—</dd>
                     <dt class="col-5 col-sm-3">Nhà xuất bản</dt><dd class="col-7 col-sm-9" th:text="${book.publisher} ?: '—'">—</dd>
@@ -78,6 +80,8 @@
                         Đăng nhập để mượn hoặc đặt trước</a>
 
                     <th:block sec:authorize="hasAnyRole('LIBRARIAN','ADMIN')">
+                        <a th:if="${book.availableCopies > 0}" class="btn btn-warning fw-semibold"
+                           th:href="@{/librarian/loans(bookId=${book.id})}">Lập phiếu mượn</a>
                         <a class="btn btn-outline-dark" th:href="@{/librarian/books/{id}/inventory(id=${book.id})}">Kho sách &amp; nhập lô</a>
                         <a class="btn btn-outline-dark" th:href="@{/librarian/books/{id}/edit(id=${book.id})}">Sửa thông tin</a>
                         <form th:action="@{/librarian/books/{id}/archive(id=${book.id})}" method="post"

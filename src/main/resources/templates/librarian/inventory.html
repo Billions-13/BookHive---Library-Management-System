@@ -1,18 +1,143 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Inventory</title></head><body>
-<h1>Inventory: <span th:text="${book.title}"></span></h1><p th:if="${error}" th:text="${error}"></p>
-<p><a th:href="@{/books/{id}(id=${book.id})}">Book details</a></p>
-<h2>Receive new batch</h2>
-<form th:action="@{/librarian/books/{id}/batches(id=${book.id})}" th:object="${batchForm}" method="post">
-<p><label>Quantity <input type="number" min="1" max="1000" th:field="*{quantity}"></label><span th:errors="*{quantity}"></span></p>
-<p><label>Supplier <input th:field="*{supplier}"></label></p>
-<p><label>Notes <input th:field="*{notes}"></label></p><button>Receive copies</button></form>
-<h2>Batch history</h2><table border="1"><tr><th>Code</th><th>Quantity</th><th>Received</th><th>Supplier</th><th>Action</th></tr>
-<tr th:each="b : ${batches}"><td th:text="${b.batchCode}"></td><td th:text="${b.quantity}"></td><td th:text="${b.receivedAt}"></td><td th:text="${b.supplier}"></td>
-<td><form th:action="@{/librarian/books/{bookId}/batches/{id}/discard(bookId=${book.id},id=${b.id})}" method="post"><button>Discard entire old batch</button></form></td></tr></table>
-<h2>Individual copies</h2><table border="1"><tr><th>Copy code</th><th>Status</th><th>Batch</th><th>Update status</th></tr>
-<tr th:each="c : ${copies}"><td th:text="${c.copyCode}"></td><td th:text="${c.status}"></td><td th:text="${c.batch.batchCode}"></td>
-<td><form th:action="@{/librarian/books/{bookId}/copies/{copyId}/status(bookId=${book.id},copyId=${c.id})}" method="post">
-<select name="status"><option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"></option></select>
-<input name="note" placeholder="Reason"><button>Change</button></form></td></tr></table>
-</body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Kho sách')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/books}">Tra cứu sách</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/books/{id}(id=${book.id})}" th:text="${book.title}">Sách</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Kho sách</li>
+        </ol>
+    </nav>
+
+    <div class="bh-page-header">
+        <h1>Kho sách: <span th:text="${book.title}">Tên sách</span></h1>
+        <a class="btn btn-outline-dark" th:href="@{/books/{id}(id=${book.id})}">Xem trang sách</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="row g-3 mb-4 text-center">
+        <div class="col-6 col-md-3"><div class="bh-stat"><div class="bh-stat-value" th:text="${book.totalCopies}">0</div><div class="small text-muted">Tổng số cuốn</div></div></div>
+        <div class="col-6 col-md-3"><div class="bh-stat"><div class="bh-stat-value text-success" th:text="${book.availableCopies}">0</div><div class="small text-muted">Có thể mượn</div></div></div>
+        <div class="col-6 col-md-3"><div class="bh-stat"><div class="bh-stat-value text-primary" th:text="${book.borrowedCopies}">0</div><div class="small text-muted">Đang được mượn</div></div></div>
+        <div class="col-6 col-md-3"><div class="bh-stat"><div class="bh-stat-value text-danger" th:text="${book.damagedCopies}">0</div><div class="small text-muted">Hư hỏng</div></div></div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Receive a new batch -->
+        <div class="col-12 col-lg-4">
+            <section class="bh-card p-3" aria-labelledby="receiveHeading">
+                <h2 id="receiveHeading" class="h6 fw-bold">Nhập lô sách mới</h2>
+                <p class="small text-muted">Mỗi cuốn trong lô được tự động gán một mã riêng (COPY...).</p>
+                <form th:action="@{/librarian/books/{id}/batches(id=${book.id})}" th:object="${batchForm}" method="post"
+                      id="batchForm">
+                    <div class="mb-2">
+                        <label class="form-label small" for="quantity">Số lượng (1–1000) <span class="text-danger">*</span></label>
+                        <input class="form-control" type="number" min="1" max="1000" id="quantity" th:field="*{quantity}"
+                               th:errorclass="is-invalid" required>
+                        <div class="invalid-feedback" th:errors="*{quantity}"></div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small" for="supplier">Nhà cung cấp</label>
+                        <input class="form-control" id="supplier" th:field="*{supplier}" th:errorclass="is-invalid" maxlength="150">
+                        <div class="invalid-feedback" th:errors="*{supplier}"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small" for="notes">Ghi chú</label>
+                        <input class="form-control" id="notes" th:field="*{notes}">
+                    </div>
+                    <button class="btn btn-warning fw-semibold w-100" type="submit">Nhập kho</button>
+                </form>
+            </section>
+        </div>
+
+        <!-- Batch history -->
+        <div class="col-12 col-lg-8">
+            <section class="bh-card" aria-labelledby="batchHeading">
+                <h2 id="batchHeading" class="h6 fw-bold p-3 mb-0 border-bottom">Lịch sử các lô nhập</h2>
+                <div th:if="${#lists.isEmpty(batches)}" class="bh-empty">Chưa nhập lô nào cho đầu sách này.</div>
+                <div class="table-responsive" th:unless="${#lists.isEmpty(batches)}">
+                    <table class="table bh-table">
+                        <thead><tr>
+                            <th scope="col">Mã lô</th><th scope="col" class="text-end">Số lượng</th>
+                            <th scope="col">Ngày nhập</th><th scope="col">Nhà cung cấp</th>
+                            <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                        </tr></thead>
+                        <tbody>
+                        <tr th:each="b : ${batches}">
+                            <td><code th:text="${b.batchCode}">BATCH-1</code></td>
+                            <td class="text-end" th:text="${b.quantity}">10</td>
+                            <td th:text="${#temporals.format(b.receivedAt, 'dd/MM/yyyy')}">01/01/2026</td>
+                            <td th:text="${b.supplier} ?: '—'">—</td>
+                            <td class="text-end">
+                                <form th:action="@{/librarian/books/{bookId}/batches/{id}/discard(bookId=${book.id},id=${b.id})}"
+                                      method="post"
+                                      data-confirm="Thanh lý toàn bộ lô này? Chỉ thực hiện được khi không còn cuốn nào đang được mượn hoặc giữ chỗ.">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Thanh lý cả lô</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Individual copies -->
+    <section class="bh-card mt-4" aria-labelledby="copiesHeading">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 p-3 border-bottom">
+            <h2 id="copiesHeading" class="h6 fw-bold mb-0">Từng cuốn sách (<span th:text="${#lists.size(copies)}">0</span>)</h2>
+            <label class="visually-hidden" for="copyFilter">Lọc theo mã cuốn hoặc trạng thái</label>
+            <input class="form-control form-control-sm w-auto" type="search" id="copyFilter"
+                   placeholder="Lọc mã cuốn, trạng thái..." data-table-filter="#copiesTable">
+        </div>
+        <div th:if="${#lists.isEmpty(copies)}" class="bh-empty">Chưa có cuốn nào. Hãy nhập lô sách mới.</div>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(copies)}">
+            <table class="table bh-table" id="copiesTable">
+                <thead><tr>
+                    <th scope="col">Mã cuốn</th><th scope="col">Trạng thái</th><th scope="col">Lô</th>
+                    <th scope="col">Cập nhật trạng thái</th>
+                </tr></thead>
+                <tbody>
+                <tr th:each="c : ${copies}">
+                    <td><code th:text="${c.copyCode}">COPY0001</code></td>
+                    <td><span th:replace="~{fragments/layout :: status('copy', ${c.status})}"></span></td>
+                    <td><code th:text="${c.batch.batchCode}">BATCH-1</code></td>
+                    <td>
+                        <span th:if="${c.status.name() == 'BORROWED' or c.status.name() == 'RESERVED'}" class="small text-muted">
+                            Đang lưu thông – xử lý qua phiếu mượn/đặt trước</span>
+                        <span th:if="${c.status.name() == 'DISCARDED'}" class="small text-muted">Đã thanh lý</span>
+                        <form th:unless="${c.status.name() == 'BORROWED' or c.status.name() == 'RESERVED' or c.status.name() == 'DISCARDED'}"
+                              class="d-flex flex-wrap gap-1"
+                              th:action="@{/librarian/books/{bookId}/copies/{copyId}/status(bookId=${book.id},copyId=${c.id})}"
+                              method="post" data-confirm-when-value="DISCARDED,LOST"
+                              data-confirm="Xác nhận đánh dấu cuốn sách này là mất/thanh lý? Thao tác thanh lý không thể hoàn tác.">
+                            <label class="visually-hidden" th:for="|status-${c.id}|">Trạng thái mới</label>
+                            <select class="form-select form-select-sm w-auto" name="status" th:id="|status-${c.id}|">
+                                <option th:each="s : ${statuses}" th:value="${s}" th:text="#{${'status.copy.' + s}}"
+                                        th:selected="${s == c.status}">Có sẵn</option>
+                            </select>
+                            <label class="visually-hidden" th:for="|note-${c.id}|">Lý do</label>
+                            <input class="form-control form-control-sm w-auto" name="note" th:id="|note-${c.id}|"
+                                   placeholder="Lý do" maxlength="500">
+                            <button class="btn btn-sm btn-outline-dark" type="submit">Cập nhật</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

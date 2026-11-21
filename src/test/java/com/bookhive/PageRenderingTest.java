@@ -144,6 +144,34 @@ class PageRenderingTest {
     }
 
     @Test
+    void librarianPagesShowCirculationData() throws Exception {
+        mvc.perform(get("/librarian/loans").param("bookId", String.valueOf(data.availableBookId)).with(librarian()))
+            .andExpect(content().string(containsString("Quá hạn")))
+            .andExpect(content().string(containsString("Nhận trả")))
+            .andExpect(content().string(containsString("value=\"" + data.availableBookId + "\"")))
+            // Only active students/lecturers can be chosen as readers.
+            .andExpect(content().string(containsString("Nguyễn Văn Sinh")))
+            .andExpect(content().string(not(containsString("Lê Thủ Thư –"))));
+
+        mvc.perform(get("/librarian/fines").with(librarian()))
+            .andExpect(content().string(containsString("10.000 ₫")))
+            .andExpect(content().string(containsString("Đã thu tiền")));
+
+        mvc.perform(get("/librarian/books/" + data.availableBookId + "/inventory").with(librarian()))
+            .andExpect(content().string(containsString("Hư hỏng")))
+            .andExpect(content().string(containsString("Đang lưu thông")))
+            .andExpect(content().string(containsString("Thanh lý cả lô")));
+
+        mvc.perform(get("/librarian/books/new").with(librarian()))
+            .andExpect(content().string(containsString("Thêm đầu sách")))
+            .andExpect(content().string(containsString("Nguyễn Nhật Ánh")));
+        mvc.perform(get("/librarian/books/" + data.availableBookId + "/edit").with(librarian()))
+            .andExpect(content().string(containsString("Sửa đầu sách")))
+            // th:field escapes accented letters as HTML entities, so check the ISBN value instead of the title.
+            .andExpect(content().string(containsString("value=\"9780000000001\"")));
+    }
+
+    @Test
     void statsApiReturnsJson() throws Exception {
         mvc.perform(get("/api/stats").with(librarian()))
             .andExpect(status().isOk())

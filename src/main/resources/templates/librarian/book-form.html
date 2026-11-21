@@ -1,16 +1,117 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Book Form</title></head><body>
-<h1>Book Information</h1><p th:if="${error}" th:text="${error}"></p>
-<form th:action="${formAction}" th:object="${bookForm}" method="post">
-<p><label>ISBN <input th:field="*{isbn}" required maxlength="20"></label><span th:errors="*{isbn}"></span></p>
-<p><label>Title <input th:field="*{title}" required></label><span th:errors="*{title}"></span></p>
-<p><label>Edition <input th:field="*{edition}"></label></p>
-<p><label>Publisher <input th:field="*{publisher}"></label></p>
-<p><label>Publication Year <input type="number" th:field="*{publicationYear}"></label><span th:errors="*{publicationYear}"></span></p>
-<p><label>Language <input th:field="*{language}"></label></p>
-<p><label>Cover URL <input th:field="*{coverUrl}"></label></p>
-<p><label>Description <textarea th:field="*{description}"></textarea></label></p>
-<p>Authors (Ctrl+click for multiple): <select multiple size="6" th:field="*{authorIds}"><option th:each="a : ${authors}" th:value="${a.id}" th:text="${a.name}"></option></select></p>
-<p>Categories: <select multiple size="6" th:field="*{categoryIds}"><option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"></option></select></p>
-<button type="submit">Save Book</button>
-</form><p><a th:href="@{/books}">Catalog</a></p></body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${#strings.endsWith(formAction, '/new')} ? 'Thêm đầu sách' : 'Sửa đầu sách')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1" th:with="isNew=${#strings.endsWith(formAction, '/new')}">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/books}">Tra cứu sách</a></li>
+            <li class="breadcrumb-item active" aria-current="page" th:text="${isNew} ? 'Thêm đầu sách' : 'Sửa đầu sách'">Thêm đầu sách</li>
+        </ol>
+    </nav>
+
+    <div class="bh-page-header">
+        <h1 th:text="${isNew} ? 'Thêm đầu sách' : 'Sửa đầu sách'">Thêm đầu sách</h1>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}">Lỗi</div>
+    <p th:if="${isNew}" class="small text-muted">
+        Sau khi lưu, vào <strong>Kho sách &amp; nhập lô</strong> để nhập số lượng cuốn; hệ thống tự sinh mã riêng cho từng cuốn.
+    </p>
+
+    <form class="bh-card p-3 p-md-4" th:action="${formAction}" th:object="${bookForm}" method="post" id="bookForm">
+        <div class="row g-3">
+            <div class="col-12 col-lg-8">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="isbn">ISBN <span class="text-danger">*</span></label>
+                        <input class="form-control" id="isbn" th:field="*{isbn}" th:errorclass="is-invalid"
+                               maxlength="20" required placeholder="VD: 9786041234567">
+                        <div class="invalid-feedback" th:errors="*{isbn}"></div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="edition">Phiên bản</label>
+                        <input class="form-control" id="edition" th:field="*{edition}" th:errorclass="is-invalid"
+                               maxlength="80" placeholder="VD: Tái bản lần 2">
+                        <div class="invalid-feedback" th:errors="*{edition}"></div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="title">Tên sách <span class="text-danger">*</span></label>
+                        <input class="form-control" id="title" th:field="*{title}" th:errorclass="is-invalid"
+                               maxlength="255" required>
+                        <div class="invalid-feedback" th:errors="*{title}"></div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="publisher">Nhà xuất bản</label>
+                        <input class="form-control" id="publisher" th:field="*{publisher}" th:errorclass="is-invalid" maxlength="150">
+                        <div class="invalid-feedback" th:errors="*{publisher}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label" for="publicationYear">Năm xuất bản</label>
+                        <input class="form-control" type="number" id="publicationYear" th:field="*{publicationYear}"
+                               th:errorclass="is-invalid" min="1400" max="2100">
+                        <div class="invalid-feedback" th:errors="*{publicationYear}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label" for="language">Ngôn ngữ</label>
+                        <input class="form-control" id="language" th:field="*{language}" th:errorclass="is-invalid"
+                               maxlength="50" placeholder="Tiếng Việt">
+                        <div class="invalid-feedback" th:errors="*{language}"></div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="authorIds">Tác giả</label>
+                        <select class="form-select" multiple size="6" id="authorIds" th:field="*{authorIds}"
+                                aria-describedby="multiHelp">
+                            <option th:each="a : ${authors}" th:value="${a.id}" th:text="${a.name}">Tác giả</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="categoryIds">Thể loại</label>
+                        <select class="form-select" multiple size="6" id="categoryIds" th:field="*{categoryIds}"
+                                aria-describedby="multiHelp">
+                            <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}">Thể loại</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <div id="multiHelp" class="form-text">
+                            Giữ Ctrl (Windows) hoặc ⌘ (Mac) để chọn nhiều.
+                            Chưa có? Thêm <a th:href="@{/librarian/authors/new}">tác giả</a> hoặc
+                            <a th:href="@{/librarian/categories/new}">thể loại</a> trước.
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="description">Mô tả</label>
+                        <textarea class="form-control" id="description" rows="4" th:field="*{description}"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <label class="form-label" for="coverUrl">Link ảnh bìa</label>
+                <input class="form-control" type="url" id="coverUrl" th:field="*{coverUrl}" th:errorclass="is-invalid"
+                       maxlength="500" placeholder="https://..." data-cover-preview="#coverPreview">
+                <div class="invalid-feedback" th:errors="*{coverUrl}"></div>
+                <div class="form-text">Ảnh xem trước hiện bên dưới khi nhập link.</div>
+                <div class="mt-3 text-center">
+                    <img id="coverPreview" class="bh-cover-img" alt="Xem trước ảnh bìa" referrerpolicy="no-referrer"
+                         th:src="${#strings.isEmpty(bookForm.coverUrl)} ? null : ${bookForm.coverUrl}"
+                         th:classappend="${#strings.isEmpty(bookForm.coverUrl)} ? 'd-none'">
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mt-4">
+            <button type="submit" class="btn btn-warning fw-semibold">Lưu đầu sách</button>
+            <a class="btn btn-outline-secondary" th:href="@{/books}">Huỷ</a>
+        </div>
+    </form>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

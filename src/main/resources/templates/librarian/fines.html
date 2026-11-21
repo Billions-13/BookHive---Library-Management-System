@@ -1,6 +1,92 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Fine Management</title></head><body>
-<h1>Fine Management</h1><table border="1"><tr><th>ID</th><th>Loan ID</th><th>Amount VND</th><th>Status</th><th>Resolve</th></tr>
-<tr th:each="f : ${fines}"><td th:text="${f.id}"></td><td th:text="${f.loan.id}"></td><td th:text="${f.amount}"></td>
-<td th:text="${f.status}"></td><td><form th:if="${f.status.name() == 'UNPAID'}" th:action="@{/librarian/fines/{id}/resolve(id=${f.id})}" method="post">
-<select name="status"><option value="PAID">Paid</option><option value="WAIVED">Waived</option></select><button>Save</button></form></td></tr></table></body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Quản lý tiền phạt')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1" th:with="unpaid=${fines.?[status.name() == 'UNPAID']}">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Quản lý tiền phạt</li>
+        </ol>
+    </nav>
+
+    <div class="bh-page-header">
+        <h1>Quản lý tiền phạt</h1>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><div class="bh-stat">
+            <div class="bh-stat-value text-danger" th:text="${#lists.size(unpaid)}">0</div>
+            <div class="small text-muted">Khoản chưa thanh toán</div></div></div>
+        <div class="col-6 col-md-3"><div class="bh-stat">
+            <div class="bh-stat-value"
+                 th:text="${#lists.isEmpty(unpaid)} ? '0 ₫' : ${#numbers.formatDecimal(#aggregates.sum(unpaid.![amount]), 1, 'POINT', 0, 'COMMA')} + ' ₫'">0 ₫</div>
+            <div class="small text-muted">Tổng tiền chưa thu</div></div></div>
+    </div>
+
+    <section class="bh-card">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 p-3 border-bottom">
+            <h2 class="h6 fw-bold mb-0">Danh sách khoản phạt</h2>
+            <div class="d-flex flex-wrap gap-2">
+                <label class="visually-hidden" for="fineStatusFilter">Lọc theo trạng thái</label>
+                <select class="form-select form-select-sm w-auto" id="fineStatusFilter" data-row-filter="#fineTable">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="UNPAID">Chưa thanh toán</option>
+                    <option value="PAID">Đã thanh toán</option>
+                    <option value="WAIVED">Được miễn</option>
+                </select>
+                <label class="visually-hidden" for="fineFilter">Tìm bạn đọc hoặc sách</label>
+                <input class="form-control form-control-sm w-auto" type="search" id="fineFilter"
+                       placeholder="Tìm bạn đọc, sách..." data-table-filter="#fineTable">
+            </div>
+        </div>
+        <div th:if="${#lists.isEmpty(fines)}" class="bh-empty">Chưa có khoản phạt nào.</div>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(fines)}">
+            <table class="table bh-table" id="fineTable">
+                <thead><tr>
+                    <th scope="col">#</th><th scope="col">Bạn đọc</th><th scope="col">Sách</th>
+                    <th scope="col" class="text-end">Số tiền</th><th scope="col">Trạng thái</th><th scope="col">Ghi chú</th>
+                    <th scope="col">Xử lý</th>
+                </tr></thead>
+                <tbody>
+                <tr th:each="f : ${fines}" th:attr="data-status=${f.status.name()}">
+                    <td th:text="${f.id}">1</td>
+                    <td>
+                        <div class="fw-semibold" th:text="${f.loan.user.fullName}">Bạn đọc</div>
+                        <div class="small text-muted" th:text="${f.loan.user.email}">email</div>
+                    </td>
+                    <td th:text="${f.loan.copy.batch.book.title}">Tên sách</td>
+                    <td class="text-end fw-semibold"
+                        th:text="${#numbers.formatDecimal(f.amount, 1, 'POINT', 0, 'COMMA')} + ' ₫'">10.000 ₫</td>
+                    <td><span th:replace="~{fragments/layout :: status('fine', ${f.status})}"></span></td>
+                    <td class="small text-muted" th:text="${f.notes} ?: '—'">—</td>
+                    <td>
+                        <form th:if="${f.status.name() == 'UNPAID'}" class="d-flex gap-1"
+                              th:action="@{/librarian/fines/{id}/resolve(id=${f.id})}" method="post"
+                              data-confirm="Xác nhận cập nhật khoản phạt này? Không thể hoàn tác.">
+                            <label class="visually-hidden" th:for="|fine-${f.id}|">Kết quả xử lý</label>
+                            <select class="form-select form-select-sm w-auto" name="status" th:id="|fine-${f.id}|">
+                                <option value="PAID">Đã thu tiền</option>
+                                <option value="WAIVED">Miễn phạt</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-dark" type="submit">Lưu</button>
+                        </form>
+                        <span th:unless="${f.status.name() == 'UNPAID'}" class="small text-muted">Đã xử lý</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="bh-empty d-none" data-filter-empty="#fineTable">Không có khoản phạt khớp bộ lọc.</p>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
