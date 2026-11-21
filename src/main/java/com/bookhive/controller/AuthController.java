@@ -33,6 +33,11 @@ public class AuthController {
         BindingResult result,
         Model model
     ) {
+        if (form.getPassword() != null
+                && !form.getPassword().equals(form.getConfirmPassword())) {
+            result.rejectValue("confirmPassword", "mismatch",
+                "Mật khẩu xác nhận không khớp");
+        }
         if (result.hasErrors()) {
             return "auth/register";
         }

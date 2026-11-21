@@ -27,6 +27,7 @@ class AuthFlowTest {
 
     @Autowired MockMvc mvc;
     @Autowired TestFixtures data;
+    @Autowired com.bookhive.repository.UserRepository users;
 
     @BeforeEach
     void seed() {
@@ -64,6 +65,61 @@ class AuthFlowTest {
     void successfulRegistrationMessageIsShownOnLoginPage() throws Exception {
         mvc.perform(get("/login").param("registered", ""))
             .andExpect(content().string(containsString("Chúc mừng đăng ký thành công")));
+    }
+
+    @Test
+    void registerCreatesStudentAccountWithStudentCode() throws Exception {
+        mvc.perform(post("/register").with(csrf())
+                .param("fullName", "Võ Thị Mới")
+                .param("studentCode", "ititiu22999")
+                .param("email", "New.Student@Test.Local")
+                .param("password", "MatKhau123")
+                .param("confirmPassword", "MatKhau123"))
+            .andExpect(redirectedUrl("/login?registered"));
+
+        var saved = users.findByEmail("new.student@test.local").orElseThrow();
+        org.junit.jupiter.api.Assertions.assertEquals("ITITIU22999", saved.getStudentCode());
+        org.junit.jupiter.api.Assertions.assertEquals(com.bookhive.enums.RoleName.STUDENT, saved.getRole().getName());
+    }
+
+    @Test
+    void registerRejectsDuplicatesAndMismatchedPasswords() throws Exception {
+        mvc.perform(post("/register").with(csrf())
+                .param("fullName", "Trùng Email")
+                .param("email", TestFixtures.STUDENT)
+                .param("password", "MatKhau123")
+                .param("confirmPassword", "MatKhau123"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("Email này đã được đăng ký")));
+
+        mvc.perform(post("/register").with(csrf())
+                .param("fullName", "Trùng MSSV")
+                .param("studentCode", "ITITIU22001")
+                .param("email", "other@test.local")
+                .param("password", "MatKhau123")
+                .param("confirmPassword", "MatKhau123"))
+            .andExpect(content().string(containsString("MSSV này đã được đăng ký")));
+
+        mvc.perform(post("/register").with(csrf())
+                .param("fullName", "Sai Xác Nhận")
+                .param("email", "mismatch@test.local")
+                .param("password", "MatKhau123")
+                .param("confirmPassword", "MatKhau456"))
+            .andExpect(content().string(containsString("Mật khẩu xác nhận không khớp")));
+    }
+
+    @Test
+    void validationMessagesAreVietnamese() throws Exception {
+        mvc.perform(post("/register").with(csrf())
+                .param("fullName", "")
+                .param("email", "khong-phai-email")
+                .param("password", "123")
+                .param("confirmPassword", "123"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("Không được để trống")))
+            .andExpect(content().string(containsString("Email không hợp lệ")))
+            .andExpect(content().string(containsString("Mật khẩu phải dài từ 8 đến 72 ký tự")))
+            .andExpect(content().string(not(containsString("name=\"phone\""))));
     }
 
     @Test
