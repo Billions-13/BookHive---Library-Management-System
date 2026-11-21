@@ -1,10 +1,71 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Author Form</title></head><body>
-<h1>Author</h1><p th:if="${error}" th:text="${error}"></p>
-<form th:action="${formAction}" th:object="${form}" method="post">
-<p><label>Name <input th:field="*{name}" required></label><span th:errors="*{name}"></span></p>
-<p><label>Country <input th:field="*{country}"></label></p>
-<p><label>Birth year <input type="number" th:field="*{birthYear}"></label></p>
-<p><label>Death year <input type="number" th:field="*{deathYear}"></label></p>
-<p><label>Website <input th:field="*{website}"></label></p>
-<p><label>Biography <textarea th:field="*{biography}"></textarea></label></p><button>Save</button></form></body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${#strings.endsWith(formAction, '/new')} ? 'Thêm tác giả' : 'Sửa tác giả')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1" th:with="isNew=${#strings.endsWith(formAction, '/new')}">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/librarian/authors}">Tác giả</a></li>
+            <li class="breadcrumb-item active" aria-current="page" th:text="${isNew} ? 'Thêm mới' : 'Sửa'">Thêm mới</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <div class="bh-page-header">
+                <h1 th:text="${isNew} ? 'Thêm tác giả' : 'Sửa tác giả'">Thêm tác giả</h1>
+            </div>
+            <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}">Lỗi</div>
+
+            <form class="bh-card p-3 p-md-4" th:action="${formAction}" th:object="${form}" method="post" id="authorForm">
+                <div class="row g-3">
+                    <div class="col-12 col-md-8">
+                        <label class="form-label" for="name">Tên tác giả <span class="text-danger">*</span></label>
+                        <input class="form-control" id="name" th:field="*{name}" th:errorclass="is-invalid" maxlength="150" required>
+                        <div class="invalid-feedback" th:errors="*{name}"></div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="country">Quốc gia</label>
+                        <input class="form-control" id="country" th:field="*{country}" th:errorclass="is-invalid" maxlength="100">
+                        <div class="invalid-feedback" th:errors="*{country}"></div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <label class="form-label" for="birthYear">Năm sinh</label>
+                        <input class="form-control" type="number" id="birthYear" th:field="*{birthYear}"
+                               th:errorclass="is-invalid" min="0" max="2100">
+                        <div class="invalid-feedback" th:errors="*{birthYear}"></div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <label class="form-label" for="deathYear">Năm mất</label>
+                        <input class="form-control" type="number" id="deathYear" th:field="*{deathYear}"
+                               th:errorclass="is-invalid" min="0" max="2100">
+                        <div class="invalid-feedback" th:errors="*{deathYear}"></div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="website">Website</label>
+                        <input class="form-control" type="url" id="website" th:field="*{website}" th:errorclass="is-invalid"
+                               maxlength="255" placeholder="https://...">
+                        <div class="invalid-feedback" th:errors="*{website}"></div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="biography">Tiểu sử</label>
+                        <textarea class="form-control" id="biography" rows="4" th:field="*{biography}"></textarea>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button class="btn btn-warning fw-semibold" type="submit">Lưu tác giả</button>
+                    <a class="btn btn-outline-secondary" th:href="@{/librarian/authors}">Huỷ</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

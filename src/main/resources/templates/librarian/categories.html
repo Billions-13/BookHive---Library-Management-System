@@ -1,18 +1,112 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Categories</title></head><body>
-<h1>Categories</h1>
-<form th:action="@{/librarian/categories}" method="get">
-<label>Name <input name="name" th:value="${name}"></label><label>Slug <input name="slug" th:value="${slug}"></label>
-<label>Audience <input name="audience" th:value="${audience}"></label>
-<label>Display order <input type="number" name="displayOrder" th:value="${displayOrder}"></label>
-<label>Active <select name="active"><option value="">Any</option><option value="true">Yes</option><option value="false">No</option></select></label>
-<label>Sort <select name="sort"><option>name</option><option>slug</option><option>displayOrder</option><option>id</option></select></label>
-<label>Direction <select name="direction"><option>asc</option><option>desc</option></select></label>
-<label>Size <select name="size"><option>10</option><option>20</option><option>50</option><option>100</option></select></label><button>Filter</button></form>
-<p><a th:if="${pages.hasPrevious()}" th:href="@{/librarian/categories(page=${pages.number - 1},size=${size},name=${name},slug=${slug},audience=${audience},displayOrder=${displayOrder},active=${active},sort=${sort},direction=${direction})}">Previous</a>
-Page <span th:text="${pages.totalPages == 0 ? 0 : pages.number + 1}"></span>/<span th:text="${pages.totalPages}"></span>
-<a th:if="${pages.hasNext()}" th:href="@{/librarian/categories(page=${pages.number + 1},size=${size},name=${name},slug=${slug},audience=${audience},displayOrder=${displayOrder},active=${active},sort=${sort},direction=${direction})}">Next</a></p><a th:href="@{/librarian/categories/new}">Add category</a>
-<table border="1"><tr><th>Name</th><th>Slug</th><th>Audience</th><th>Action</th></tr>
-<tr th:each="c : ${categories}"><td th:text="${c.name}"></td><td th:text="${c.slug}"></td><td th:text="${c.targetAudience}"></td><td>
-<a th:href="@{/librarian/categories/{id}/edit(id=${c.id})}">Edit</a>
-<form th:action="@{/librarian/categories/{id}/archive(id=${c.id})}" method="post"><button>Archive</button></form></td></tr></table></body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Thể loại')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Thể loại</li>
+        </ol>
+    </nav>
+
+    <div class="bh-page-header">
+        <h1>Thể loại</h1>
+        <a class="btn btn-warning fw-semibold" th:href="@{/librarian/categories/new}">+ Thêm thể loại</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <form class="bh-card p-3 mb-3" th:action="@{/librarian/categories}" method="get">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-3">
+                <label class="form-label small mb-1" for="name">Tên thể loại</label>
+                <input class="form-control form-control-sm" id="name" name="name" th:value="${name}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="slug">Slug</label>
+                <input class="form-control form-control-sm" id="slug" name="slug" th:value="${slug}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="audience">Đối tượng</label>
+                <input class="form-control form-control-sm" id="audience" name="audience" th:value="${audience}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="displayOrder">Thứ tự hiển thị</label>
+                <input class="form-control form-control-sm" type="number" id="displayOrder" name="displayOrder"
+                       th:value="${displayOrder}">
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small mb-1" for="active">Trạng thái</label>
+                <select class="form-select form-select-sm" id="active" name="active" data-autosubmit>
+                    <option value="" th:selected="${active == null}">Tất cả</option>
+                    <option value="true" th:selected="${active == true}">Đang sử dụng</option>
+                    <option value="false" th:selected="${active == false}">Đã ẩn</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small mb-1" for="sort">Sắp xếp theo</label>
+                <select class="form-select form-select-sm" id="sort" name="sort" data-autosubmit>
+                    <option value="name" th:selected="${sort == 'name'}">Tên</option>
+                    <option value="slug" th:selected="${sort == 'slug'}">Slug</option>
+                    <option value="displayOrder" th:selected="${sort == 'displayOrder'}">Thứ tự hiển thị</option>
+                    <option value="id" th:selected="${sort == 'id'}">Mới thêm</option>
+                </select>
+            </div>
+            <div th:replace="~{fragments/layout :: direction(${direction})}"></div>
+            <div th:replace="~{fragments/layout :: page-size(${size})}"></div>
+            <div class="col-12 col-md-2 d-grid">
+                <button class="btn btn-sm btn-dark" type="submit">Lọc</button>
+            </div>
+            <div class="col-12 col-md-2 d-grid">
+                <a class="btn btn-sm btn-outline-secondary" th:href="@{/librarian/categories}">Xoá bộ lọc</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="bh-card">
+        <div th:if="${#lists.isEmpty(categories)}" class="bh-empty">
+            <span class="bh-empty-icon">🏷️</span>Không có thể loại phù hợp.
+        </div>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(categories)}">
+            <table class="table table-hover bh-table">
+                <thead><tr>
+                    <th scope="col">Tên thể loại</th><th scope="col">Slug</th><th scope="col">Đối tượng</th>
+                    <th scope="col">Thứ tự</th><th scope="col">Trạng thái</th>
+                    <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                </tr></thead>
+                <tbody>
+                <tr th:each="c : ${categories}">
+                    <td class="fw-semibold" th:text="${c.name}">Tên</td>
+                    <td><code th:text="${c.slug}">slug</code></td>
+                    <td th:text="${c.targetAudience} ?: '—'">—</td>
+                    <td th:text="${c.displayOrder}">0</td>
+                    <td>
+                        <span th:if="${c.active}" class="badge rounded-pill bh-status bh-status-AVAILABLE">Đang sử dụng</span>
+                        <span th:unless="${c.active}" class="badge rounded-pill bh-status bh-status-DISCARDED">Đã ẩn</span>
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-dark" th:href="@{/librarian/categories/{id}/edit(id=${c.id})}">Sửa</a>
+                        <form th:if="${c.active}" class="d-inline" th:action="@{/librarian/categories/{id}/archive(id=${c.id})}"
+                              method="post" data-confirm="Ẩn thể loại này? Sách đã gắn thể loại vẫn giữ nguyên.">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Ẩn</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/layout :: pagination(${pages},
+            @{/librarian/categories(page=${pages.number - 1},size=${size},name=${name},slug=${slug},audience=${audience},displayOrder=${displayOrder},active=${active},sort=${sort},direction=${direction})},
+            @{/librarian/categories(page=${pages.number + 1},size=${size},name=${name},slug=${slug},audience=${audience},displayOrder=${displayOrder},active=${active},sort=${sort},direction=${direction})})}"></nav>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

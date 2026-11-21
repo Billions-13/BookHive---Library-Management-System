@@ -1,19 +1,111 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Authors</title></head><body>
-<h1>Authors</h1>
-<form th:action="@{/librarian/authors}" method="get">
-<label>Name <input name="name" th:value="${name}"></label><label>Country <input name="country" th:value="${country}"></label>
-<label>Birth year <input type="number" name="birthYear" th:value="${birthYear}"></label>
-<label>Death year <input type="number" name="deathYear" th:value="${deathYear}"></label>
-<label>Active <select name="active"><option value="">Any</option><option value="true">Yes</option><option value="false">No</option></select></label>
-<label>Sort <select name="sort"><option>name</option><option>country</option><option>birthYear</option><option>id</option></select></label>
-<label>Direction <select name="direction"><option>asc</option><option>desc</option></select></label>
-<label>Size <select name="size"><option>10</option><option>20</option><option>50</option><option>100</option></select></label><button>Filter</button>
-</form>
-<p><a th:if="${pages.hasPrevious()}" th:href="@{/librarian/authors(page=${pages.number - 1},size=${size},name=${name},country=${country},birthYear=${birthYear},deathYear=${deathYear},active=${active},sort=${sort},direction=${direction})}">Previous</a>
-Page <span th:text="${pages.totalPages == 0 ? 0 : pages.number + 1}"></span>/<span th:text="${pages.totalPages}"></span>
-<a th:if="${pages.hasNext()}" th:href="@{/librarian/authors(page=${pages.number + 1},size=${size},name=${name},country=${country},birthYear=${birthYear},deathYear=${deathYear},active=${active},sort=${sort},direction=${direction})}">Next</a></p><a th:href="@{/librarian/authors/new}">Add author</a>
-<table border="1"><tr><th>Name</th><th>Country</th><th>Birth</th><th>Action</th></tr>
-<tr th:each="a : ${authors}"><td th:text="${a.name}"></td><td th:text="${a.country}"></td><td th:text="${a.birthYear}"></td><td>
-<a th:href="@{/librarian/authors/{id}/edit(id=${a.id})}">Edit</a>
-<form th:action="@{/librarian/authors/{id}/archive(id=${a.id})}" method="post"><button>Archive</button></form></td></tr></table></body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Tác giả')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<a th:replace="~{fragments/layout :: skip-link}"></a>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main id="main" class="container py-4 flex-grow-1">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Tác giả</li>
+        </ol>
+    </nav>
+
+    <div class="bh-page-header">
+        <h1>Tác giả</h1>
+        <a class="btn btn-warning fw-semibold" th:href="@{/librarian/authors/new}">+ Thêm tác giả</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <form class="bh-card p-3 mb-3" th:action="@{/librarian/authors}" method="get">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-3">
+                <label class="form-label small mb-1" for="name">Tên tác giả</label>
+                <input class="form-control form-control-sm" id="name" name="name" th:value="${name}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="country">Quốc gia</label>
+                <input class="form-control form-control-sm" id="country" name="country" th:value="${country}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="birthYear">Năm sinh</label>
+                <input class="form-control form-control-sm" type="number" id="birthYear" name="birthYear" th:value="${birthYear}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="deathYear">Năm mất</label>
+                <input class="form-control form-control-sm" type="number" id="deathYear" name="deathYear" th:value="${deathYear}">
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small mb-1" for="active">Trạng thái</label>
+                <select class="form-select form-select-sm" id="active" name="active" data-autosubmit>
+                    <option value="" th:selected="${active == null}">Tất cả</option>
+                    <option value="true" th:selected="${active == true}">Đang sử dụng</option>
+                    <option value="false" th:selected="${active == false}">Đã ẩn</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small mb-1" for="sort">Sắp xếp theo</label>
+                <select class="form-select form-select-sm" id="sort" name="sort" data-autosubmit>
+                    <option value="name" th:selected="${sort == 'name'}">Tên</option>
+                    <option value="country" th:selected="${sort == 'country'}">Quốc gia</option>
+                    <option value="birthYear" th:selected="${sort == 'birthYear'}">Năm sinh</option>
+                    <option value="id" th:selected="${sort == 'id'}">Mới thêm</option>
+                </select>
+            </div>
+            <div th:replace="~{fragments/layout :: direction(${direction})}"></div>
+            <div th:replace="~{fragments/layout :: page-size(${size})}"></div>
+            <div class="col-12 col-md-2 d-grid">
+                <button class="btn btn-sm btn-dark" type="submit">Lọc</button>
+            </div>
+            <div class="col-12 col-md-2 d-grid">
+                <a class="btn btn-sm btn-outline-secondary" th:href="@{/librarian/authors}">Xoá bộ lọc</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="bh-card">
+        <div th:if="${#lists.isEmpty(authors)}" class="bh-empty">
+            <span class="bh-empty-icon">✍️</span>Không có tác giả phù hợp.
+        </div>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(authors)}">
+            <table class="table table-hover bh-table">
+                <thead><tr>
+                    <th scope="col">Tên tác giả</th><th scope="col">Quốc gia</th><th scope="col">Năm sinh</th>
+                    <th scope="col">Năm mất</th><th scope="col">Trạng thái</th>
+                    <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                </tr></thead>
+                <tbody>
+                <tr th:each="a : ${authors}">
+                    <td class="fw-semibold" th:text="${a.name}">Tên</td>
+                    <td th:text="${a.country} ?: '—'">—</td>
+                    <td th:text="${a.birthYear} ?: '—'">—</td>
+                    <td th:text="${a.deathYear} ?: '—'">—</td>
+                    <td>
+                        <span th:if="${a.active}" class="badge rounded-pill bh-status bh-status-AVAILABLE">Đang sử dụng</span>
+                        <span th:unless="${a.active}" class="badge rounded-pill bh-status bh-status-DISCARDED">Đã ẩn</span>
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-dark" th:href="@{/librarian/authors/{id}/edit(id=${a.id})}">Sửa</a>
+                        <form th:if="${a.active}" class="d-inline" th:action="@{/librarian/authors/{id}/archive(id=${a.id})}"
+                              method="post" data-confirm="Ẩn tác giả này? Sách đã gắn tác giả vẫn giữ nguyên.">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Ẩn</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/layout :: pagination(${pages},
+            @{/librarian/authors(page=${pages.number - 1},size=${size},name=${name},country=${country},birthYear=${birthYear},deathYear=${deathYear},active=${active},sort=${sort},direction=${direction})},
+            @{/librarian/authors(page=${pages.number + 1},size=${size},name=${name},country=${country},birthYear=${birthYear},deathYear=${deathYear},active=${active},sort=${sort},direction=${direction})})}"></nav>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
