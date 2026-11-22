@@ -1,0 +1,5 @@
+{
+  "code-runner.executorMap": {
+    "java": "mvn -f \"$workspaceRoot/pom.xml\" spring-boot:run"
+  }
+}

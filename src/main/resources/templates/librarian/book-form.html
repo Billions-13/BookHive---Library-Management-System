@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Book Form</title></head><body>
+<h1>Book Information</h1><p th:if="${error}" th:text="${error}"></p>
+<form th:action="${formAction}" th:object="${bookForm}" method="post">
+<p><label>ISBN <input th:field="*{isbn}" required maxlength="20"></label><span th:errors="*{isbn}"></span></p>
+<p><label>Title <input th:field="*{title}" required></label><span th:errors="*{title}"></span></p>
+<p><label>Edition <input th:field="*{edition}"></label></p>
+<p><label>Publisher <input th:field="*{publisher}"></label></p>
+<p><label>Publication Year <input type="number" th:field="*{publicationYear}"></label><span th:errors="*{publicationYear}"></span></p>
+<p><label>Language <input th:field="*{language}"></label></p>
+<p><label>Cover URL <input th:field="*{coverUrl}"></label></p>
+<p><label>Description <textarea th:field="*{description}"></textarea></label></p>
+<p>Authors (Ctrl+click for multiple): <select multiple size="6" th:field="*{authorIds}"><option th:each="a : ${authors}" th:value="${a.id}" th:text="${a.name}"></option></select></p>
+<p>Categories: <select multiple size="6" th:field="*{categoryIds}"><option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"></option></select></p>
+<button type="submit">Save Book</button>
+</form><p><a th:href="@{/books}">Catalog</a></p></body></html>

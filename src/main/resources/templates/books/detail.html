@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Book Details</title></head><body>
+<a th:href="@{/books}">Back to catalog</a><h1 th:text="${book.title}">Title</h1>
+<p>ISBN: <span th:text="${book.isbn}"></span></p>
+<p>Authors: <span th:text="${#strings.listJoin(book.authorNames, ', ')}"></span></p>
+<p>Categories: <span th:text="${#strings.listJoin(book.categoryNames, ', ')}"></span></p>
+<p>Edition: <span th:text="${book.edition}"></span>; Publisher: <span th:text="${book.publisher}"></span></p>
+<p>Year: <span th:text="${book.publicationYear}"></span>; Language: <span th:text="${book.language}"></span></p>
+<p th:text="${book.description}"></p>
+<p>Total copies: <span th:text="${book.totalCopies}"></span>; Available: <span th:text="${book.availableCopies}"></span>;
+Borrowed: <span th:text="${book.borrowedCopies}"></span>; Damaged: <span th:text="${book.damagedCopies}"></span></p>
+<p th:if="${book.availableCopies == 0}">Currently no copies are available to borrow.</p>
+<form th:if="${book.availableCopies > 0}" th:action="@{/my/borrow/{id}(id=${book.id})}" method="post"><button>Borrow (signed in)</button></form>
+<form th:if="${book.availableCopies == 0}" th:action="@{/my/reservations/{id}(id=${book.id})}" method="post"><button>Join reservation queue</button></form>
+<p><a th:href="@{/librarian/books/{id}/inventory(id=${book.id})}">Inventory (staff)</a> |
+<a th:href="@{/librarian/books/{id}/edit(id=${book.id})}">Edit (staff)</a></p>
+<form th:action="@{/librarian/books/{id}/archive(id=${book.id})}" method="post"><button>Archive book (staff only)</button></form>
+</body></html>

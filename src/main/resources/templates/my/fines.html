@@ -1,0 +1,4 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>My Fines</title></head><body>
+<h1>My Fines</h1><table border="1"><tr><th>Loan ID</th><th>Amount VND</th><th>Status</th></tr>
+<tr th:each="f : ${fines}"><td th:text="${f.loan.id}"></td><td th:text="${f.amount}"></td><td th:text="${f.status}"></td></tr></table></body></html>

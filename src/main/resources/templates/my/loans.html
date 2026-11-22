@@ -1,0 +1,6 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>My Loans</title></head><body>
+<h1>My Loans</h1><p><a th:href="@{/books}">Borrow books</a> | <a th:href="@{/my/reservations}">My reservations</a></p>
+<table border="1"><tr><th>Copy code</th><th>Book</th><th>Borrowed</th><th>Due</th><th>Returned</th><th>Status</th></tr>
+<tr th:each="l : ${loans}"><td th:text="${l.copy.copyCode}"></td><td th:text="${l.copy.batch.book.title}"></td><td th:text="${l.borrowedAt}"></td><td th:text="${l.dueDate}"></td><td th:text="${l.returnDate}"></td><td th:text="${l.status}"></td></tr></table>
+<p th:if="${#lists.isEmpty(loans)}">No loans yet.</p></body></html>
