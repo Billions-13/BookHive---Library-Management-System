@@ -8,6 +8,7 @@
  * - Confirmation before destructive POST actions, recognised by the form's URL
  *   (archive, discard, cancel, return, toggle, resolve) or a data-confirm="..." attribute
  * - Submit buttons are disabled while a POST form is being sent (no double submit)
+ * - Search forms keep the chosen sort / page size / filters and re-run when sort or size changes
  * - window.BookHive.fetchJson(): fetch() with the CSRF token and Vietnamese error messages
  */
 (() => {
@@ -151,6 +152,34 @@
         }
         return response.json();
     }
+
+    /* ---------- Search forms: keep the chosen options, apply sort / size at once ---------- */
+
+    const onReady = (fn) => (document.readyState === 'loading'
+        ? document.addEventListener('DOMContentLoaded', fn) : fn());
+
+    // Changing one of these only changes how results are shown, so search again immediately.
+    const DISPLAY_FIELDS = ['sort', 'direction', 'size'];
+
+    function initSearchForms() {
+        const params = new URLSearchParams(window.location.search);
+        document.querySelectorAll('form').forEach((form) => {
+            if ((form.getAttribute('method') || 'get').toLowerCase() !== 'get') return;
+            form.querySelectorAll('select[name]').forEach((select) => {
+                // The list pages render these selects without a selected option, so after a search
+                // they jump back to the first value. Show the value that is actually in use.
+                const value = params.get(select.name);
+                if (value !== null && Array.from(select.options).some((o) => o.value === value)) {
+                    select.value = value;
+                }
+                if (DISPLAY_FIELDS.includes(select.name)) {
+                    select.addEventListener('change', () => (form.requestSubmit ? form.requestSubmit() : form.submit()));
+                }
+            });
+        });
+    }
+
+    onReady(initSearchForms);
 
     window.BookHive = { fetchJson };
 })();
