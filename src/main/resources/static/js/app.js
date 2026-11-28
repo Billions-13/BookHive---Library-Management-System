@@ -9,6 +9,7 @@
  *   (archive, discard, cancel, return, toggle, resolve) or a data-confirm="..." attribute
  * - Submit buttons are disabled while a POST form is being sent (no double submit)
  * - Search forms keep the chosen sort / page size / filters and re-run when sort or size changes
+ * - Tables with 5+ rows get a quick filter box (Vietnamese accents are ignored)
  * - window.BookHive.fetchJson(): fetch() with the CSRF token and Vietnamese error messages
  */
 (() => {
@@ -180,6 +181,53 @@
     }
 
     onReady(initSearchForms);
+
+    /* ---------- Tables: quick filter on the rows already on the page ---------- */
+
+    /** Lower-case and drop Vietnamese accents, so "nguyen" matches "Nguyễn". */
+    const fold = (text) => (text || '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+        .toLowerCase();
+
+    const MIN_ROWS_FOR_FILTER = 5;
+
+    /** Rows with data cells; header rows may sit in <tbody> when a table has no <thead>. */
+    function dataRows(table) {
+        return Array.from(table.rows).filter((row) => row.parentElement.tagName !== 'THEAD'
+            && Array.from(row.cells).some((cell) => cell.tagName === 'TD'));
+    }
+
+    function initTableFilters() {
+        document.querySelectorAll('table').forEach((table, index) => {
+            const rows = dataRows(table);
+            if (rows.length < MIN_ROWS_FOR_FILTER || 'noFilter' in table.dataset) return;
+
+            const id = `bh-table-filter-${index + 1}`;
+            const box = document.createElement('div');
+            box.className = 'bh-table-filter mb-2';
+            box.innerHTML = `<label for="${id}" class="form-label small mb-1">Lọc nhanh trong bảng</label>`
+                + `<input id="${id}" type="search" class="form-control form-control-sm"`
+                + ' placeholder="Gõ tên, mã, trạng thái... (không cần dấu)">'
+                + '<div class="small text-muted mt-1" aria-live="polite"></div>';
+            table.before(box);
+
+            const input = box.querySelector('input');
+            const summary = box.querySelector('div');
+            input.addEventListener('input', () => {
+                const query = fold(input.value.trim());
+                let shown = 0;
+                rows.forEach((row) => {
+                    const match = !query || fold(row.textContent).includes(query);
+                    row.hidden = !match;
+                    if (match) shown += 1;
+                });
+                summary.textContent = query ? `Đang hiện ${shown}/${rows.length} dòng` : '';
+            });
+        });
+    }
+
+    onReady(initTableFilters);
 
     window.BookHive = { fetchJson };
 })();
